@@ -1,18 +1,22 @@
 import 'dart:io';
+import 'dart:typed_data'; // ⬅️ untuk Web
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:palm_diagnose/core/constants/fitness_app_theme.dart';
 import 'package:palm_diagnose/features/auth/controllers/auth_controller.dart';
 import 'package:palm_diagnose/features/user/detection/widgets/detection_result_card.dart';
 import 'package:palm_diagnose/shared/widgets/custom_animated_appbar.dart';
-import 'package:palm_diagnose/features/user/detection/controllers/detection_service.dart'; // ⬅️ Import DetectionResult
+import 'package:palm_diagnose/features/user/detection/controllers/detection_service.dart'; // DetectionResult
 
 class DetectionResultPage extends StatefulWidget {
-  final File imageFile;
-  final List<DetectionResult> results; // ✅ perbaikan: bukan Map lagi
+  final File? imageFile;
+  final Uint8List? imageBytesWeb;
+  final List<DetectionResult> results;
 
   const DetectionResultPage({
     super.key,
-    required this.imageFile,
+    this.imageFile,
+    this.imageBytesWeb,
     required this.results,
   });
 
@@ -27,16 +31,20 @@ class _DetectionResultPageState extends State<DetectionResultPage>
 
   @override
   void initState() {
-    print('>>> Hasil Deteksi dibuka');
     super.initState();
+    print('>>> Hasil Deteksi dibuka');
+    print("✅ Masuk halaman hasil. Jumlah result: ${widget.results.length}");
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
+
     _animation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+
     _animationController.forward();
   }
 
@@ -74,11 +82,13 @@ class _DetectionResultPageState extends State<DetectionResultPage>
             top: 0,
             left: 0,
             right: 0,
-            child: Image.file(
-              widget.imageFile,
-              fit: BoxFit.cover,
-              height: 280,
-            ),
+            child: kIsWeb
+                ? Image.memory(
+                    widget.imageBytesWeb!,
+                    fit: BoxFit.cover,
+                    height: 280,
+                  )
+                : Image.file(widget.imageFile!, fit: BoxFit.cover, height: 280),
           ),
           Positioned.fill(
             top: 200,
@@ -101,10 +111,9 @@ class _DetectionResultPageState extends State<DetectionResultPage>
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 5,
-                  right: 5,
-                  top: 24,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 24,
                 ),
                 child: SingleChildScrollView(
                   child: Column(
@@ -135,10 +144,7 @@ class _DetectionResultPageState extends State<DetectionResultPage>
                         '🩺 Deskripsi Penyakit:\n\n'
                         'Deskripsi penyakit yang terdeteksi akan ditampilkan di sini.\n'
                         'Bisa memuat informasi gejala, penyebab, serta langkah pencegahan.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          height: 1.5,
-                        ),
+                        style: TextStyle(fontSize: 16, height: 1.5),
                       ),
                     ],
                   ),

@@ -1,0 +1,169 @@
+import 'package:flutter/material.dart';
+
+/// Ubah warna sesuai tema aplikasimu
+const Color primaryColor = Color(0xFF3AC35B);
+const Color secondaryColor = Color(0xFF9E9E9E);
+const double height = 60;
+
+class BottomNavBarCurvedFb1 extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onItemTapped;
+  final VoidCallback onFabPressed;
+
+  const BottomNavBarCurvedFb1({
+    super.key,
+    required this.currentIndex,
+    required this.onItemTapped,
+    required this.onFabPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
+
+    return BottomAppBar(
+      color: Colors.transparent,
+      elevation: 0,
+      child: Stack(
+        children: [
+          CustomPaint(
+            size: Size(size.width, height + 6),
+            painter: BottomNavCurvePainter(backgroundColor: Colors.white),
+          ),
+          Center(
+            heightFactor: 0.6,
+            child: FloatingActionButton(
+              backgroundColor: primaryColor,
+              child: const Icon(Icons.add),
+              elevation: 0.1,
+              onPressed: onFabPressed,
+            ),
+          ),
+          SizedBox(
+            height: height,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                NavBarIcon(
+                  // text: "Home",
+                  icon: Icons.home_outlined,
+                  selected: currentIndex == 0,
+                  onPressed: () => onItemTapped(0),
+                  defaultColor: secondaryColor,
+                  selectedColor: primaryColor,
+                ),
+                NavBarIcon(
+                  // text: "Riwayat",
+                  icon: Icons.history,
+                  selected: currentIndex == 1,
+                  onPressed: () => onItemTapped(1),
+                  defaultColor: secondaryColor,
+                  selectedColor: primaryColor,
+                ),
+                const SizedBox(width: 56), // spacing for FAB
+                NavBarIcon(
+                  // text: "Lainnya",
+                  icon: Icons.more_horiz,
+                  selected: currentIndex == 2,
+                  onPressed: () => onItemTapped(2),
+                  defaultColor: secondaryColor,
+                  selectedColor: primaryColor,
+                ),
+                NavBarIcon(
+                  // text: "Profil",
+                  icon: Icons.person_outline,
+                  selected: currentIndex == 3,
+                  onPressed: () => onItemTapped(3),
+                  defaultColor: secondaryColor,
+                  selectedColor: primaryColor,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class NavBarIcon extends StatelessWidget {
+  // final String text;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onPressed;
+  final Color defaultColor;
+  final Color selectedColor;
+
+  const NavBarIcon({
+    super.key,
+    // required this.text,
+    required this.icon,
+    required this.selected,
+    required this.onPressed,
+    required this.defaultColor,
+    required this.selectedColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = selected ? selectedColor : defaultColor;
+    return GestureDetector(
+      onTap: onPressed,
+      behavior: HitTestBehavior.translucent,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(height: 4),
+          // Text(text, style: TextStyle(fontSize: 12, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+class BottomNavCurvePainter extends CustomPainter {
+  final Color backgroundColor;
+
+  BottomNavCurvePainter({required this.backgroundColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+
+    final Path path = Path();
+    final double fabRadius = 38;
+
+    path.moveTo(0, 0);
+    path.lineTo((size.width / 2) - fabRadius - 20, 0);
+    path.quadraticBezierTo(
+      (size.width / 2) - fabRadius,
+      0,
+      (size.width / 2) - fabRadius + 10,
+      20,
+    );
+    path.arcToPoint(
+      Offset((size.width / 2) + fabRadius - 10, 20),
+      radius: const Radius.circular(40.0),
+      clockwise: false,
+    );
+    path.quadraticBezierTo(
+      (size.width / 2) + fabRadius,
+      0,
+      (size.width / 2) + fabRadius + 20,
+      0,
+    );
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    canvas.drawShadow(path, Colors.black, 4, true);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}

@@ -1,17 +1,13 @@
-import 'dart:typed_data';
-import 'dart:io' show File, Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:palm_diagnose/routers/app_routes.dart';
 import 'package:palm_diagnose/features/user/detection/controllers/detection_service.dart';
 
 class DetectPage extends StatefulWidget {
-  final File? imageFile; // For mobile
-  final Uint8List? imageBytesWeb; // For web
+  final File imageFile;
 
-  const DetectPage({Key? key, this.imageFile, this.imageBytesWeb})
-    : super(key: key);
-
+  const DetectPage({super.key, required this.imageFile});
+  
   @override
   State<DetectPage> createState() => _DetectPageState();
 }
@@ -33,9 +29,7 @@ class _DetectPageState extends State<DetectPage> {
     });
 
     try {
-      final results = kIsWeb
-          ? await DetectionService.predictWeb(widget.imageBytesWeb!)
-          : await DetectionService.predict(widget.imageFile!);
+      final results = await DetectionService.predict(widget.imageFile);
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(
@@ -43,7 +37,6 @@ class _DetectPageState extends State<DetectPage> {
         AppRoutes.detectResult,
         arguments: {
           'imageFile': widget.imageFile,
-          'imageBytesWeb': widget.imageBytesWeb,
           'results': results,
         },
       );
@@ -63,15 +56,15 @@ class _DetectPageState extends State<DetectPage> {
         child: _isLoading
             ? const CircularProgressIndicator()
             : _errorMessage != null
-            ? Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  '❌ $_errorMessage',
-                  style: const TextStyle(color: Colors.red),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            : const Text('Selesai memproses gambar.'),
+                ? Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      '❌ $_errorMessage',
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : const Text('Selesai memproses gambar.'),
       ),
     );
   }

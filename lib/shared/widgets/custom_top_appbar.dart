@@ -18,7 +18,11 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       automaticallyImplyLeading: false,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
+      shadowColor: Colors.transparent, // agar tidak ada bayangan
+      surfaceTintColor: Colors
+          .transparent, // untuk menghindari efek gelap di beberapa versi Flutter
+
       elevation: 0,
       toolbarHeight: kToolbarHeight + 16,
       title: Padding(

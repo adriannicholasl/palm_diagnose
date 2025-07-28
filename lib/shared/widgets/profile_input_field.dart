@@ -26,111 +26,88 @@ class ProfileInputField extends StatefulWidget {
 class _ProfileInputFieldState extends State<ProfileInputField> {
   late bool _obscure;
 
+  static const primaryColor = Color(0xff9333ea);
+  static const borderColor = Color(0xffe0e0e0);
+  static const errorColor = Color(0xffEF4444);
+  static const backgroundColor = Colors.white;
+
   @override
   void initState() {
     super.initState();
     _obscure = widget.obscureText;
+
+    // Jika password kosong, isi dengan "******"
+    if (_obscure && widget.controller.text.isEmpty) {
+      widget.controller.text = "******";
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(widget.label, style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextField(
+        controller: widget.controller,
+        enabled: widget.enabled,
+        obscureText: _obscure && widget.controller.text != "******",
+        keyboardType: widget.keyboardType,
+        inputFormatters: widget.inputFormatters,
+        style: const TextStyle(
+          fontSize: 14,
+          color: Color.fromARGB(255, 126, 126, 126),
+        ),
+        decoration: InputDecoration(
+          isDense: true, // mengecilkan tinggi
+          filled: true,
+          fillColor: backgroundColor,
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          labelText: widget.label,
+          labelStyle: const TextStyle(color: Color.fromARGB(255, 94, 94, 94)),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 15,
           ),
-          child: TextField(
-            controller: widget.controller,
-            enabled: widget.enabled,
-            keyboardType: widget.keyboardType,
-            inputFormatters: widget.inputFormatters,
-            obscureText: _obscure,
-            style: const TextStyle(fontSize: 14),
-            decoration: InputDecoration(
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 14,
-                horizontal: 14,
-              ),
-              border: InputBorder.none,
-              suffixIcon: widget.obscureText
-                  ? IconButton(
-                      icon: Icon(
-                        _obscure ? Icons.visibility_off : Icons.visibility,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscure = !_obscure;
-                        });
-                      },
-                    )
-                  : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(
+              color: Color.fromARGB(255, 187, 187, 187),
             ),
           ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(
+              color: Color.fromARGB(255, 72, 204, 39),
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: errorColor),
+          ),
+          suffixIcon: widget.obscureText
+              ? IconButton(
+                  icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscure = !_obscure;
+
+                      // Hapus ****** saat toggle ke show
+                      if (!_obscure && widget.controller.text == "******") {
+                        widget.controller.clear();
+                      }
+                    });
+                  },
+                )
+              : null,
         ),
-        const SizedBox(height: 12),
-      ],
+      ),
     );
   }
 }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Text(
-//           label,
-//           style: const TextStyle(
-//             color: Color(0xFF6C7278),
-//             fontSize: 12,
-//             fontWeight: FontWeight.w500,
-//             letterSpacing: -0.24,
-//           ),
-//         ),
-//         const SizedBox(height: 2),
-//         Container(
-//           margin: const EdgeInsets.only(bottom: 12),
-//           decoration: ShapeDecoration(
-//             color: enabled ? Colors.white : const Color(0xFFF3F4F6),
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(10),
-//               side: const BorderSide(color: Color(0xFFEDF1F3)),
-//             ),
-//             shadows: const [
-//               BoxShadow(
-//                 color: Color(0x3DE4E5E7),
-//                 blurRadius: 2,
-//                 offset: Offset(0, 1),
-//               ),
-//             ],
-//           ),
-//           child: TextField(
-//             controller: controller,
-//             enabled: enabled,
-//             keyboardType: keyboardType,
-//             inputFormatters: inputFormatters,
-//             obscureText: obscureText,
-//             style: const TextStyle(fontSize: 14),
-//             decoration: const InputDecoration(
-//               isDense: true,
-//               contentPadding: EdgeInsets.symmetric(
-//                 vertical: 14,
-//                 horizontal: 14,
-//               ),
-//               border: InputBorder.none,
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }

@@ -1,8 +1,6 @@
-import 'dart:io' as io;
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 import 'package:palm_diagnose/shared/widgets/custom_buttom_bar.dart';
 import 'package:palm_diagnose/features/admin/pages/admin_dashboard_page.dart';
@@ -32,46 +30,33 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _onFabPressed() {
-    DialogUtils.showImageSourceActionSheet(context, (source) async {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        imageQuality: null,
-        maxWidth: null,
-        maxHeight: null,
-        preferredCameraDevice: CameraDevice.rear,
-      );
+    DialogUtils.showImageSourceActionSheet(
+      context,
+      (source) async {
+        final picker = ImagePicker();
+        final pickedFile = await picker.pickImage(
+          source: source,
+          imageQuality: null, // ⛔ Jangan dikompres
+          maxWidth: null,
+          maxHeight: null,
+          preferredCameraDevice: CameraDevice.rear,
+        );
 
-      if (pickedFile != null) {
-        if (!context.mounted) return;
-
-        if (kIsWeb) {
-          // ✅ Web
-          final Uint8List imageBytes = await pickedFile.readAsBytes();
-          debugPrint('📸 [WEB] Gambar dipilih: ${pickedFile.name}');
-          debugPrint('📏 Ukuran file: ${imageBytes.lengthInBytes} bytes');
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DetectPage(imageBytesWeb: imageBytes),
-            ),
-          );
-        } else {
-          // ✅ Android / iOS
-          final io.File file = io.File(pickedFile.path);
-          debugPrint('📸 [MOBILE] Gambar dipilih: ${file.path}');
+        if (pickedFile != null) {
+          final file = File(pickedFile.path);
+          debugPrint('📸 Gambar dipilih: ${file.path}');
           debugPrint('📏 Ukuran file: ${await file.length()} bytes');
 
+          if (!context.mounted) return;
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => DetectPage(imageFile: file)),
           );
+        } else {
+          debugPrint("⚠️ Tidak ada gambar dipilih");
         }
-      } else {
-        debugPrint("⚠️ Tidak ada gambar dipilih");
-      }
-    });
+      },
+    );
   }
 
   @override
@@ -81,13 +66,16 @@ class _MainNavigationState extends State<MainNavigation> {
     final List<Widget> _pages = [
       isAdmin ? const AdminDashboardPage() : const UserHomePage(),
       isAdmin ? const DataUserPage() : const HistoryDetectPage(),
-      const Placeholder(), // Tombol ke-4 (belum dipakai)
+      const Placeholder(), // Tombol ke-4 bisa diganti
       const ProfilePage(),
     ];
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
       bottomNavigationBar: BottomNavBarCurvedFb1(
         currentIndex: _selectedIndex,
         onItemTapped: _onTabSelected,

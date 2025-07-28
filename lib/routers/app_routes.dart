@@ -52,13 +52,17 @@ class AppRoutes {
     // 🔁 Halaman hasil deteksi, butuh imageFile + List<DetectionResult>
     detectResult: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is Map<String, dynamic> &&
-          args['imageFile'] != null &&
-          args['results'] != null &&
-          args['results'] is List<DetectionResult>) {
+      if (args is Map<String, dynamic> && args['results'] != null) {
         return DetectionResultPage(
           imageFile: args['imageFile'],
-          results: args['results'] as List<DetectionResult>, // ✅ ini benar
+          imageBytesWeb: args['imageBytesWeb'], // tambahkan
+          results: (args['results'] as List)
+              .map(
+                (e) => e is DetectionResult
+                    ? e
+                    : DetectionResult.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
         );
       } else {
         return const Scaffold(
