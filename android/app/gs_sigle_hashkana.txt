@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "729282474795",
+    "project_id": "deteksipohonkelapa",
+    "storage_bucket": "deteksipohonkelapa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:729282474795:android:86b9e6472fef9d66898b6e",
+        "android_client_info": {
+          "package_name": "com.example.palm_diagnose"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "729282474795-hdfr8gog0sa5749pprk23mob7m1dkgpn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.palm_diagnose",
+            "certificate_hash": "7716e6ed8f417142f45e3d02faae57b4b57a6c91"
+          }
+        },
+        {
+          "client_id": "729282474795-dqf11hllg6ckup6ef6uukho646apcn7l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAUz-WrTy_8oFbHkOYahWcwTJqNcJ7oV3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "729282474795-dqf11hllg6ckup6ef6uukho646apcn7l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "729282474795-3jm7k061rmklei9kmdfh338r8osdqkn6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.deteksiPohonKelapaApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,19 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": { "default": { "projectId": "deteksipohonkelapa", "appId": "1:729282474795:android:86b9e6472fef9d66898b6e", "fileOutput": "android/app/google-services.json" } },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "deteksipohonkelapa",
+          "configurations": {
+            "android": "1:729282474795:android:86b9e6472fef9d66898b6e",
+            "ios": "1:729282474795:ios:ad2a1c380cfbc6e5898b6e",
+            "macos": "1:729282474795:ios:ad2a1c380cfbc6e5898b6e",
+            "web": "1:729282474795:web:360c9b6cde62d6e7898b6e",
+            "windows": "1:729282474795:web:d6c028077cf55cbb898b6e"
+          }
+        }
+      }
+    }
+  }
+}

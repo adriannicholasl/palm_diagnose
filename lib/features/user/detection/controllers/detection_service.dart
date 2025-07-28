@@ -1,0 +1,54 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+
+class DetectionResult {
+  final String model;
+  final String label;
+  final double confidence;
+
+  DetectionResult({
+    required this.model,
+    required this.label,
+    required this.confidence,
+  });
+
+  factory DetectionResult.fromJson(Map<String, dynamic> json) {
+    return DetectionResult(
+      model: json['model_name'] ?? '-', // 🔁 gunakan key dari backend
+      label: json['predicted_label'] ?? '-',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+}
+
+class DetectionService {
+  static const String _baseUrl = "https://703e567c30f9.ngrok-free.app/predict";
+
+  static Future<List<DetectionResult>> predict(File imageFile) async {
+    final uri = Uri.parse(_baseUrl);
+
+    try {
+      final request = http.MultipartRequest('POST', uri)
+        ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final resultList = data['results'] as List;
+
+        // 🔁 parsing langsung ke List<DetectionResult>
+        return resultList
+            .map((item) => DetectionResult.fromJson(item))
+            .toList();
+      } else {
+        throw HttpException(
+            "Gagal mendeteksi gambar: ${response.statusCode} - ${response.body}");
+      }
+    } catch (e) {
+      throw Exception("Terjadi kesalahan saat prediksi gambar: $e");
+    }
+  }
+}
