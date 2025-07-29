@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:palm_diagnose/features/auth/controllers/auth_controller.dart';
 import 'package:palm_diagnose/features/auth/pages/auth_gate.dart';
-import 'package:palm_diagnose/features/auth/pages/login_page.dart'
+import 'package:palm_diagnose/features/auth/pages/signin_page.dart'
     hide GradientText;
 import 'package:palm_diagnose/features/auth/widgets/auth_input_field.dart';
 // import 'package:palm_diagnose/features/auth/widgets/auth_back_button.dart';
@@ -85,11 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE1F9C6),
-              Color(0xFFE4FFEB),
-              Color(0xFFFFFFFF),
-            ],
+            colors: [Color(0xFFE1F9C6), Color(0xFFE4FFEB), Color(0xFFFFFFFF)],
           ),
         ),
         child: SafeArea(
@@ -112,7 +108,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 32),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 24),
+                        horizontal: 20,
+                        vertical: 24,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -157,7 +155,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (_) => const SignInScreen()),
+                                      builder: (_) => const SignInScreen(),
+                                    ),
                                   );
                                 },
                                 child: const Text(
@@ -197,7 +196,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 : null,
                             keyboardType: TextInputType.phone,
                             inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly
+                              FilteringTextInputFormatter.digitsOnly,
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -260,12 +259,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                             child: isLoading
                                 ? const CircularProgressIndicator(
-                                    color: Colors.white)
+                                    color: Colors.white,
+                                  )
                                 : const Text(
                                     "Register",
                                     style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
                                   ),
                           ),
                         ],

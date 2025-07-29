@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:palm_diagnose/features/auth/controllers/auth_controller.dart';
 import 'package:palm_diagnose/features/auth/pages/auth_gate.dart';
-import 'package:palm_diagnose/features/auth/pages/register_page.dart';
+import 'package:palm_diagnose/features/auth/pages/signup_page.dart';
 import 'package:palm_diagnose/features/auth/widgets/auth_input_field.dart';
 import 'package:palm_diagnose/core/constants/svg_assets.dart';
 
@@ -36,11 +36,7 @@ class GradientText extends StatelessWidget {
         );
       },
       blendMode: BlendMode.srcIn,
-      child: Text(
-        text,
-        style: style,
-        textAlign: textAlign,
-      ),
+      child: Text(text, style: style, textAlign: textAlign),
     );
   }
 }
@@ -71,11 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFE1F9C6),
-              Color(0xFFE4FFEB),
-              Color(0xFFFFFFFF),
-            ],
+            colors: [Color(0xFFE1F9C6), Color(0xFFE4FFEB), Color(0xFFFFFFFF)],
           ),
         ),
         child: SafeArea(
@@ -97,7 +89,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 32),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 24),
+                      horizontal: 20,
+                      vertical: 24,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -153,7 +147,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (_) => const AuthGate()),
+                                      builder: (_) => const AuthGate(),
+                                    ),
                                   );
                                 }
                               },
@@ -170,10 +165,13 @@ class _SignInScreenState extends State<SignInScreen> {
                                 elevation: 0,
                                 backgroundColor: Colors.white,
                                 foregroundColor: const Color(0xFF444444),
-                                side:
-                                    const BorderSide(color: Color(0xFFE0E0E0)),
+                                side: const BorderSide(
+                                  color: Color(0xFFE0E0E0),
+                                ),
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 16, horizontal: 20),
+                                  vertical: 16,
+                                  horizontal: 20,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -241,8 +239,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                           "Remember me",
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                              fontSize:
-                                                  12), // tambahkan ukuran kecil
+                                            fontSize: 12,
+                                          ), // tambahkan ukuran kecil
                                           softWrap: false,
                                         ),
                                       ),
@@ -296,7 +294,8 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 16),
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10), // padding luar kiri-kanan
+                            horizontal: 10,
+                          ), // padding luar kiri-kanan
                           child: SizedBox(
                             width: double.infinity, // tombol selebar parent
                             child: ElevatedButton(
@@ -304,11 +303,11 @@ class _SignInScreenState extends State<SignInScreen> {
                                 final email = emailController.text.trim();
                                 final password = passwordController.text.trim();
                                 final auth = AuthController();
-                                final error =
-                                    await auth.loginWithEmailAndPassword(
-                                  email: email,
-                                  password: password,
-                                );
+                                final error = await auth
+                                    .loginWithEmailAndPassword(
+                                      email: email,
+                                      password: password,
+                                    );
                                 if (!context.mounted) return;
                                 if (error != null) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -318,7 +317,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                   Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (_) => const AuthGate()),
+                                      builder: (_) => const AuthGate(),
+                                    ),
                                   );
                                 }
                               },
@@ -327,10 +327,12 @@ class _SignInScreenState extends State<SignInScreen> {
                                 backgroundColor: const Color(0xFF3366FF),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 16), // tinggi tombol
+                                  vertical: 16,
+                                ), // tinggi tombol
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
-                                      8), // lebih elegan dari 5
+                                    8,
+                                  ), // lebih elegan dari 5
                                 ),
                               ),
                               child: const Text(
@@ -353,7 +355,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (_) => const SignUpScreen()),
+                                    builder: (_) => const SignUpScreen(),
+                                  ),
                                 );
                               },
                               child: const Text(

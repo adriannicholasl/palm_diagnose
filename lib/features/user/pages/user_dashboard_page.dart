@@ -1,10 +1,10 @@
-// lib/features/admin/pages/admin_dashboard_page.dart
+// lib/features/user/pages/user_home_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
 
-class AdminDashboardPage extends StatelessWidget {
-  const AdminDashboardPage({super.key});
+class UserHomePage extends StatelessWidget {
+  const UserHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class AdminDashboardPage extends StatelessWidget {
         }
 
         final userData = snapshot.data!;
-        final displayName = userData['displayName'] ?? 'Admin';
+        final displayName = userData['displayName'] ?? 'User';
 
         return Center(
           child: Column(
@@ -37,7 +37,7 @@ class AdminDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                '(Halaman dashboard admin)',
+                '(Halaman beranda user)',
                 style: TextStyle(
                   fontStyle: FontStyle.italic,
                   color: Colors.grey,

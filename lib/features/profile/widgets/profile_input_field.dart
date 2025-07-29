@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 class ProfileInputField extends StatefulWidget {
   final String label;
+  final String? hintText;
   final TextEditingController controller;
   final TextInputType? keyboardType;
   final bool enabled;
@@ -17,6 +18,7 @@ class ProfileInputField extends StatefulWidget {
     this.enabled = true,
     this.obscureText = false,
     this.inputFormatters,
+    this.hintText,
   });
 
   @override
@@ -35,11 +37,6 @@ class _ProfileInputFieldState extends State<ProfileInputField> {
   void initState() {
     super.initState();
     _obscure = widget.obscureText;
-
-    // Jika password kosong, isi dengan "******"
-    if (_obscure && widget.controller.text.isEmpty) {
-      widget.controller.text = "******";
-    }
   }
 
   @override
@@ -49,7 +46,7 @@ class _ProfileInputFieldState extends State<ProfileInputField> {
       child: TextField(
         controller: widget.controller,
         enabled: widget.enabled,
-        obscureText: _obscure && widget.controller.text != "******",
+        obscureText: _obscure,
         keyboardType: widget.keyboardType,
         inputFormatters: widget.inputFormatters,
         style: const TextStyle(
@@ -57,6 +54,7 @@ class _ProfileInputFieldState extends State<ProfileInputField> {
           color: Color.fromARGB(255, 126, 126, 126),
         ),
         decoration: InputDecoration(
+          hintText: widget.hintText ?? '',
           isDense: true, // mengecilkan tinggi
           filled: true,
           fillColor: backgroundColor,

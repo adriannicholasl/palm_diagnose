@@ -19,10 +19,8 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.transparent,
-      shadowColor: Colors.transparent, // agar tidak ada bayangan
-      surfaceTintColor: Colors
-          .transparent, // untuk menghindari efek gelap di beberapa versi Flutter
-
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
       toolbarHeight: kToolbarHeight + 16,
       title: Padding(
@@ -30,32 +28,33 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            /// Foto Profil
+            /// Foto Profil tanpa cache
             GestureDetector(
               onTap: onTapProfile,
-              child: profileImageUrl != null
-                  ? ClipOval(
-                      child: Image.network(
+              child: ClipOval(
+                child: profileImageUrl != null && profileImageUrl!.isNotEmpty
+                    ? Image.network(
                         profileImageUrl!,
-                        fit: BoxFit.cover,
                         height: 44,
                         width: 44,
-                        errorBuilder: (_, __, ___) => Image.asset(
-                          'assets/images/default_avatar.jpg',
-                          height: 44,
-                          width: 44,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    )
-                  : ClipOval(
-                      child: Image.asset(
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          debugPrint('⚠️ Error load profile image: $error');
+                          return Image.asset(
+                            'assets/images/default_avatar.jpg',
+                            height: 44,
+                            width: 44,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                      )
+                    : Image.asset(
                         'assets/images/default_avatar.jpg',
                         height: 44,
                         width: 44,
                         fit: BoxFit.cover,
                       ),
-                    ),
+              ),
             ),
 
             /// Teks

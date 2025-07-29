@@ -80,10 +80,10 @@ class AuthController {
 
       // Simpan ke Firestore
       final user = result.user!;
-      await _firebaseService.saveUserToFirestore(user, additionalData: {
-        'username': username,
-        'phone': phone,
-      });
+      await _firebaseService.saveUserToFirestore(
+        user,
+        additionalData: {'username': username, 'phone': phone},
+      );
 
       await user.sendEmailVerification(); // opsional
       return null;

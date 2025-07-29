@@ -6,4 +6,7 @@ class AppColors {
   static const textColor = Color(0xFF757575);
   static const background = Colors.white;
   static const error = Colors.redAccent;
+  static const Color bgLight = Color(
+    0xFFF5F5F5,
+  ); // ⬅️ untuk background card ringan
 }

@@ -6,11 +6,14 @@ class FirebaseService {
   Future<Map<String, dynamic>?> getCurrentUserData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return null;
-    final doc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
     return doc.data();
   }
 
+  static User? get currentUser => FirebaseAuth.instance.currentUser;
   // Ambil semua user sebagai Stream
   Stream<List<Map<String, dynamic>>> getAllUsersStream() {
     return _db.collection('users').snapshots().map((snapshot) {
@@ -23,8 +26,10 @@ class FirebaseService {
   }
 
   /// ✅ Simpan data user ke Firestore (jika belum ada)
-  Future<void> saveUserToFirestore(User user,
-      {Map<String, dynamic>? additionalData}) async {
+  Future<void> saveUserToFirestore(
+    User user, {
+    Map<String, dynamic>? additionalData,
+  }) async {
     final userRef = _db.collection('users').doc(user.uid);
     final doc = await userRef.get();
 
@@ -72,17 +77,16 @@ class FirebaseService {
   }
 
   /// 💾 Simpan hasil deteksi penyakit daun kelapa
-  Future<void> saveDetection({
+  Future<void> saveDetectionResults({
     required String uid,
-    required String method,
-    required String result,
-    required double confidence,
+    required String filename,
+    required List<Map<String, dynamic>>
+    results, // isinya model, label, confidence
   }) async {
     await _db.collection('detections').add({
       'uid': uid,
-      'method': method,
-      'result': result,
-      'confidence': confidence,
+      'filename': filename,
+      'results': results,
       'timestamp': Timestamp.now(),
     });
   }

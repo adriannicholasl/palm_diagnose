@@ -5,10 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
 import 'package:palm_diagnose/features/auth/controllers/auth_controller.dart';
-import 'package:palm_diagnose/shared/widgets/custom_top_appbar.dart';
-import 'package:palm_diagnose/shared/widgets/profile_input_field.dart';
+import 'package:palm_diagnose/features/profile/widgets/profile_input_field.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
-import 'package:palm_diagnose/core/constants/gradient_scaffold.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -91,10 +89,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<bool> _updatePasswordIfNeeded() async {
     if (isGoogleSignIn) return true;
 
-    final newPassword = _passwordController.text;
-    final confirmPassword = _confirmPasswordController.text;
+    final newPassword = _passwordController.text.trim();
+    final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (newPassword.isEmpty && confirmPassword.isEmpty) return true;
+    // Tambahan: abaikan jika placeholder dummy
+    if ((newPassword.isEmpty && confirmPassword.isEmpty) ||
+        (newPassword == '******' && confirmPassword == '******')) {
+      return true;
+    }
 
     if (newPassword != confirmPassword) {
       _showSnackBar('❗ Password tidak sama');
@@ -194,114 +196,106 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return GradientScaffold(
-      appBar: CustomTopAppBar(
-        title: _usernameController.text.isEmpty
-            ? 'Profil'
-            : _usernameController.text,
-        upperTitle: 'Profil Pengguna',
-        profileImageUrl: _photoURL,
-        onTapProfile: _handleLogout,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage:
-                          (_photoURL != null && _photoURL!.isNotEmpty)
-                          ? NetworkImage(_photoURL!)
-                          : const AssetImage('assets/images/default_avatar.jpg')
-                                as ImageProvider,
-                    ),
-                    const SizedBox(height: 16),
-                    ProfileInputField(
-                      label: 'Username',
-                      controller: _usernameController,
-                    ),
-                    ProfileInputField(
-                      label: 'Email',
-                      controller: _emailController,
-                      enabled: false,
-                    ),
-                    ProfileInputField(
-                      label: 'No. Telepon',
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                    ProfileInputField(
-                      label: 'Alamat',
-                      controller: _alamatController,
-                    ),
-                    ProfileInputField(
-                      label: 'Luas Tanah (m²)',
-                      controller: _luasTanahController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                    ProfileInputField(
-                      label: 'Jumlah Pohon',
-                      controller: _jumlahPohonController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    ),
-                    ProfileInputField(
-                      label: isGoogleSignIn
-                          ? 'Password (akun Google)'
-                          : 'Password Baru',
-                      controller: _passwordController,
-                      obscureText: true,
-                      enabled: !isGoogleSignIn,
-                    ),
-                    ProfileInputField(
-                      label: 'Konfirmasi Password',
-                      controller: _confirmPasswordController,
-                      obscureText: true,
-                      enabled: !isGoogleSignIn,
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _saveProfile,
-                            style: _buttonStyle(Color(0xFF3AC35B)),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Color.fromARGB(255, 255, 255, 255),
-                                    ),
-                                  )
-                                : const Text('Simpan'),
-                          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage:
+                        (_photoURL != null && _photoURL!.isNotEmpty)
+                        ? NetworkImage(_photoURL!)
+                        : const AssetImage('assets/images/default_avatar.jpg')
+                              as ImageProvider,
+                  ),
+                  const SizedBox(height: 16),
+                  ProfileInputField(
+                    label: 'Username',
+                    controller: _usernameController,
+                  ),
+                  ProfileInputField(
+                    label: 'Email',
+                    controller: _emailController,
+                    enabled: false,
+                  ),
+                  ProfileInputField(
+                    label: 'No. Telepon',
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+                  ProfileInputField(
+                    label: 'Alamat',
+                    controller: _alamatController,
+                  ),
+                  ProfileInputField(
+                    label: 'Luas Tanah (m²)',
+                    controller: _luasTanahController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+                  ProfileInputField(
+                    label: 'Jumlah Pohon',
+                    controller: _jumlahPohonController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  ),
+                  ProfileInputField(
+                    label: isGoogleSignIn
+                        ? 'Password (akun Google)'
+                        : 'Password Baru',
+                    controller: _passwordController,
+                    obscureText: true,
+                    enabled: !isGoogleSignIn,
+                    hintText: '••••••', // ini hanya tampilan, bukan nilai
+                  ),
+                  ProfileInputField(
+                    label: 'Konfirmasi Password',
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    enabled: !isGoogleSignIn,
+                    hintText: '••••••',
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: _buttonStyle(const Color(0xFF3AC35B)),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Simpan'),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _handleLogout,
-                            style: _buttonStyle(Colors.red),
-                            child: const Text('Logout'),
-                          ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _handleLogout,
+                          style: _buttonStyle(Colors.red),
+                          child: const Text('Logout'),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -334,6 +328,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (confirm == true) {
       await AuthController().logout();
+
       if (!context.mounted) return;
       Navigator.of(context).pushReplacementNamed('/auth');
     }

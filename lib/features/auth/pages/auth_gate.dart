@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:palm_diagnose/features/auth/pages/login_page.dart';
-import 'package:palm_diagnose/common/main_navigation.dart'; // Pastikan file ini sudah ada
+import 'package:palm_diagnose/features/auth/pages/signin_page.dart';
+import 'package:palm_diagnose/features/main/pages/home_page.dart';
+
+/// Pastikan file ini sudah ada
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -14,8 +16,10 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   Future<String?> _getUserRole(String uid) async {
     try {
-      final doc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .get();
       final data = doc.data();
       return data?['role'];
     } catch (e) {
@@ -54,11 +58,12 @@ class _AuthGateState extends State<AuthGate> {
             final role = roleSnapshot.data;
 
             if (role == 'admin' || role == 'user') {
-              return MainNavigation(role: role!); // arahkan ke MainNavigation
+              return HomePage(role: role!); // arahkan ke MainNavigation
             } else {
               return const Scaffold(
                 body: Center(
-                    child: Text('Peran tidak dikenali atau belum diatur.')),
+                  child: Text('Peran tidak dikenali atau belum diatur.'),
+                ),
               );
             }
           },

@@ -3,7 +3,7 @@ import 'dart:io' show File, Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:palm_diagnose/routers/app_routes.dart';
-import 'package:palm_diagnose/features/user/detection/controllers/detection_service.dart';
+import 'package:palm_diagnose/core/services/detection_service.dart';
 
 class DetectPage extends StatefulWidget {
   final File? imageFile; // For mobile

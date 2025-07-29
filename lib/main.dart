@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:palm_diagnose/routers/app_routes.dart';
 import 'package:palm_diagnose/firebase_options.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
-import 'package:palm_diagnose/shared/widgets/custom_buttom_bar.dart';
+import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
 
 // Sesuaikan pathnya
 void main() async {

@@ -24,7 +24,7 @@ class DetectionResult {
 }
 
 class DetectionService {
-  static const String _baseUrl = "https://06c2ea9ab88d.ngrok-free.app/predict";
+  static const String _baseUrl = "https://d8a7804a7815.ngrok-free.app/predict";
 
   // 🔍 Untuk Android/iOS/Desktop
   static Future<List<DetectionResult>> predict(File imageFile) async {
@@ -58,12 +58,15 @@ class DetectionService {
     final uri = Uri.parse(_baseUrl);
 
     try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filename = 'web_$timestamp.jpg';
+
       final request = http.MultipartRequest('POST', uri)
         ..files.add(
           http.MultipartFile.fromBytes(
             'image',
             imageBytes,
-            filename: 'web_image.jpg',
+            filename: filename, // ✅ nama unik
           ),
         );
 
@@ -74,7 +77,6 @@ class DetectionService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print('🧪 Parsed data: $data');
         final resultList = data['results'] as List;
         return resultList
             .map((item) => DetectionResult.fromJson(item))

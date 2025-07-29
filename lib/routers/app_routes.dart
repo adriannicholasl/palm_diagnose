@@ -1,28 +1,22 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 // AUTH
-import 'package:palm_diagnose/features/auth/pages/login_page.dart';
-import 'package:palm_diagnose/features/auth/pages/register_page.dart';
+import 'package:palm_diagnose/features/auth/pages/signin_page.dart';
+import 'package:palm_diagnose/features/auth/pages/signup_page.dart';
 import 'package:palm_diagnose/features/auth/pages/auth_gate.dart';
 
-// ADMIN
-import 'package:palm_diagnose/features/admin/pages/admin_dashboard_page.dart';
-
-// USER
-import 'package:palm_diagnose/features/user/pages/user_home_page.dart';
 // import 'package:palm_diagnose/features/user/history/pages/history_page.dart';
 
-import 'package:palm_diagnose/features/user/detection/pages/detect_page.dart';
-import 'package:palm_diagnose/features/user/detection/pages/detection_result_page.dart';
-import 'package:palm_diagnose/features/user/detection/controllers/detection_service.dart'; // ⬅️ Import model DetectionResult
+import 'package:palm_diagnose/features/detect/pages/detect_page.dart';
+import 'package:palm_diagnose/features/detect/pages/detection_result_page.dart';
+import 'package:palm_diagnose/core/services/detection_service.dart'; // ⬅️ Import model DetectionResult
 
 class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String authGate = '/auth';
-  static const String adminDashboard = '/admin/dashboard';
-  static const String userHome = '/user/home';
+  // static const String adminDashboard = '/admin/dashboard';
+  // static const String userHome = '/user/home';
 
   static const String detect = '/user/detect';
   static const String detectResult = '/user/detect/result';
@@ -34,8 +28,8 @@ class AppRoutes {
     login: (_) => const SignInScreen(),
     register: (_) => const SignUpScreen(),
     authGate: (_) => const AuthGate(),
-    adminDashboard: (_) => const AdminDashboardPage(),
-    userHome: (_) => const UserHomePage(),
+    // adminDashboard: (_) => const AdminDashboardPage(),
+    // userHome: (_) => const UserHomePage(),
 
     // 🔁 Halaman deteksi, butuh imageFile
     detect: (context) {
@@ -54,8 +48,8 @@ class AppRoutes {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic> && args['results'] != null) {
         return DetectionResultPage(
-          imageFile: args['imageFile'],
-          imageBytesWeb: args['imageBytesWeb'], // tambahkan
+          imageFile: args['imageFile'], // bisa null jika web
+          imageBytesWeb: args['imageBytesWeb'], // bisa null jika mobile
           results: (args['results'] as List)
               .map(
                 (e) => e is DetectionResult
