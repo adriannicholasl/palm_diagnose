@@ -1,0 +1,9 @@
+{
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "files.autoSaveWhenNoErrors": true,
+  "files.autoSaveWorkspaceFilesOnly": true,
+  "dart.flutterHotReloadOnSave": "allIfDirty",
+  "editor.codeActions.triggerOnFocusChange": true,
+  "editor.formatOnSave": true
+}

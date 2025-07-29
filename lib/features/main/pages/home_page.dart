@@ -20,8 +20,10 @@ import 'package:palm_diagnose/core/utils/dialog_utils.dart';
 
 class HomePage extends StatefulWidget {
   final String role;
+  final int initialIndex;
 
-  const HomePage({super.key, required this.role});
+
+  const HomePage({super.key, required this.role, this.initialIndex = 0});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -35,6 +37,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _loadUserInfo();
   }
 

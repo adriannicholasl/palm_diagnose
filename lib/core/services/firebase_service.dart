@@ -25,6 +25,43 @@ class FirebaseService {
     });
   }
 
+  Future<Map<String, int>> getAllDetectionCountsGroupedByUser() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('detections')
+        .get();
+    final Map<String, int> counts = {};
+
+    for (var doc in snapshot.docs) {
+      final uid = doc['uid'];
+      if (uid != null) {
+        counts[uid] = (counts[uid] ?? 0) + 1;
+      }
+    }
+
+    return counts;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllUsersWithDetectionCounts() async {
+    final usersSnapshot = await _db.collection('users').get();
+    final detectionsSnapshot = await _db.collection('detections').get();
+
+    // Hitung jumlah deteksi per uid
+    final Map<String, int> detectionCounts = {};
+    for (var doc in detectionsSnapshot.docs) {
+      final uid = doc['uid'];
+      if (uid != null) {
+        detectionCounts[uid] = (detectionCounts[uid] ?? 0) + 1;
+      }
+    }
+
+    // Gabungkan data user + jumlah deteksi
+    return usersSnapshot.docs.map((userDoc) {
+      final userData = userDoc.data();
+      final uid = userData['uid'];
+      return {...userData, 'totalDeteksi': detectionCounts[uid] ?? 0};
+    }).toList();
+  }
+
   /// ✅ Simpan data user ke Firestore (jika belum ada)
   Future<void> saveUserToFirestore(
     User user, {
@@ -98,6 +135,15 @@ class FirebaseService {
         .where('uid', isEqualTo: uid)
         .orderBy('timestamp', descending: true)
         .snapshots();
+  }
+
+  // Hitung jumlah deteksi suer
+  Future<int> getDetectionCountByUser(String uid) async {
+    final snapshot = await _db
+        .collection('detections')
+        .where('uid', isEqualTo: uid)
+        .get();
+    return snapshot.docs.length;
   }
 
   /// 🛡️ Ambil semua data deteksi (untuk admin)

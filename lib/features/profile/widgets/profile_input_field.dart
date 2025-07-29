@@ -28,11 +28,6 @@ class ProfileInputField extends StatefulWidget {
 class _ProfileInputFieldState extends State<ProfileInputField> {
   late bool _obscure;
 
-  static const primaryColor = Color(0xff9333ea);
-  static const borderColor = Color(0xffe0e0e0);
-  static const errorColor = Color(0xffEF4444);
-  static const backgroundColor = Colors.white;
-
   @override
   void initState() {
     super.initState();
@@ -41,62 +36,75 @@ class _ProfileInputFieldState extends State<ProfileInputField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 18),
       child: TextField(
         controller: widget.controller,
         enabled: widget.enabled,
         obscureText: _obscure,
         keyboardType: widget.keyboardType,
         inputFormatters: widget.inputFormatters,
-        style: const TextStyle(
+        style: TextStyle(
+          fontFamily: 'Poppins',
           fontSize: 14,
-          color: Color.fromARGB(255, 126, 126, 126),
+          color: isDark ? Colors.grey : Colors.grey[700],
         ),
         decoration: InputDecoration(
           hintText: widget.hintText ?? '',
-          isDense: true, // mengecilkan tinggi
+          isDense: true,
           filled: true,
-          fillColor: backgroundColor,
+          fillColor: isDark ? Colors.grey[850] : Colors.white,
           floatingLabelBehavior: FloatingLabelBehavior.auto,
           labelText: widget.label,
-          labelStyle: const TextStyle(color: Color.fromARGB(255, 94, 94, 94)),
+          labelStyle: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 13,
+            color: isDark ? Colors.grey : Colors.grey[700],
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
-            vertical: 15,
+            vertical: 20,
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: borderColor),
+            borderSide: BorderSide(
+              color: isDark
+                  ? const Color.fromARGB(0, 0, 0, 0)
+                  : const Color.fromARGB(0, 255, 255, 255),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(
-              color: Color.fromARGB(255, 187, 187, 187),
+            borderSide: BorderSide(
+              color: isDark
+                  ? const Color.fromARGB(43, 117, 117, 117)
+                  : const Color.fromARGB(60, 165, 165, 165),
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(
-              color: Color.fromARGB(255, 72, 204, 39),
+              color: Color(0xFF43A047), // warna hijau elegan
               width: 2,
             ),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: errorColor),
+            borderSide: const BorderSide(color: Color(0xFFE53935)),
           ),
           suffixIcon: widget.obscureText
               ? IconButton(
                   icon: Icon(
                     _obscure ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey,
+                    color: isDark ? Colors.grey[400] : Colors.grey,
                   ),
                   onPressed: () {
                     setState(() {
                       _obscure = !_obscure;
 
-                      // Hapus ****** saat toggle ke show
                       if (!_obscure && widget.controller.text == "******") {
                         widget.controller.clear();
                       }

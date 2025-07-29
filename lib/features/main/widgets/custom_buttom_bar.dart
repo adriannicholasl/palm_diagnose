@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 
 /// Warna tema aplikasi
-const Color primaryColor = Color(0xFF3AC35B);
-const Color secondaryColor = Color(0xFF9E9E9E);
-
-/// Tinggi area navigasi bawah
+const Color selectedColor = Color(0xFF43A047); // hijau elegan
+const Color unselectedColor = Color(0xFF9E9E9E); // abu
 const double bottomBarHeight = 60;
-
-/// Radius FAB untuk lengkungan
 const double fabRadius = 24;
 
 class BottomNavBarCurvedFb1 extends StatelessWidget {
@@ -25,16 +21,16 @@ class BottomNavBarCurvedFb1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return BottomAppBar(
       elevation: 0,
       color: Colors.transparent,
       padding: EdgeInsets.zero,
       child: SizedBox(
-        height: bottomBarHeight + 35, // Atur tinggi keseluruhan
+        height: bottomBarHeight + 35,
         child: Stack(
           children: [
-            // Jadikan background di posisi paling bawah layar
             Positioned(
               bottom: 0,
               left: 0,
@@ -42,28 +38,48 @@ class BottomNavBarCurvedFb1 extends StatelessWidget {
               child: CustomPaint(
                 size: Size(size.width, bottomBarHeight),
                 painter: BottomNavCurvePainter(
-                  backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                  backgroundColor: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : Colors.white,
                 ),
               ),
             ),
-
-            // FAB tetap di tengah
+            // FAB dengan gradasi hijau
             Positioned(
               bottom: bottomBarHeight / 2 - fabRadius / 3,
-              left: MediaQuery.of(context).size.width / 2 - fabRadius,
+              left: size.width / 2 - fabRadius,
               child: SizedBox(
                 width: fabRadius * 2,
                 height: fabRadius * 2,
-                child: FloatingActionButton(
-                  foregroundColor: Colors.white,
-                  backgroundColor: primaryColor,
-                  elevation: 4,
-                  onPressed: onFabPressed,
-                  child: const Icon(Icons.camera_enhance),
+                child: GestureDetector(
+                  onTap: onFabPressed,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF43A047), Color(0xFF66BB6A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        16,
+                      ), // 💡 Atur radius di sini
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(51),
+                          blurRadius: 6,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.camera_enhance, color: Colors.white),
+                    ),
+                  ),
                 ),
               ),
             ),
-            // Ikon bar tetap di posisi tengah
             Align(
               alignment: Alignment.bottomCenter,
               child: SizedBox(
@@ -81,7 +97,7 @@ class BottomNavBarCurvedFb1 extends StatelessWidget {
                       selected: currentIndex == 1,
                       onPressed: () => onItemTapped(1),
                     ),
-                    const SizedBox(width: 56), // Space for FAB
+                    const SizedBox(width: 56), // ruang untuk FAB
                     NavBarIcon(
                       icon: Icons.close_sharp,
                       selected: currentIndex == 2,
@@ -117,7 +133,7 @@ class NavBarIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? primaryColor : secondaryColor;
+    final color = selected ? selectedColor : unselectedColor;
 
     return GestureDetector(
       onTap: onPressed,
@@ -127,8 +143,6 @@ class NavBarIcon extends StatelessWidget {
         children: [
           Icon(icon, color: color),
           const SizedBox(height: 4),
-          // Bisa aktifkan teks label jika diinginkan
-          // Text(text, style: TextStyle(fontSize: 12, color: color)),
         ],
       ),
     );
@@ -154,9 +168,8 @@ class BottomNavCurvePainter extends CustomPainter {
     final notchEnd = (size.width / 2) + (fabNotchWidth / 2);
     final fabCurveDepth = 15.0;
     final topRadius = 25.0;
-    final bottomRadius = 20.0;
+    final bottomRadius = 0.0;
 
-    // Mulai dari kiri atas dengan radius
     path.moveTo(0, topRadius);
     path.arcToPoint(
       Offset(topRadius, 0),
@@ -164,10 +177,7 @@ class BottomNavCurvePainter extends CustomPainter {
       clockwise: true,
     );
 
-    // Garis ke sisi kiri dari notch
     path.lineTo(notchStart - fabNotchSide, 0);
-
-    // Mulai lengkungan FAB
     path.quadraticBezierTo(notchStart, 0, notchStart + 10, fabCurveDepth);
     path.arcToPoint(
       Offset(notchEnd - 10, fabCurveDepth),
@@ -176,7 +186,6 @@ class BottomNavCurvePainter extends CustomPainter {
     );
     path.quadraticBezierTo(notchEnd, 0, notchEnd + fabNotchSide, 0);
 
-    // Garis ke kanan atas, lalu radius ke bawah
     path.lineTo(size.width - topRadius, 0);
     path.arcToPoint(
       Offset(size.width, topRadius),
@@ -184,7 +193,6 @@ class BottomNavCurvePainter extends CustomPainter {
       clockwise: true,
     );
 
-    // Sisi kanan ke bawah
     path.lineTo(size.width, size.height - bottomRadius);
     path.arcToPoint(
       Offset(size.width - bottomRadius, size.height),
@@ -192,7 +200,6 @@ class BottomNavCurvePainter extends CustomPainter {
       clockwise: true,
     );
 
-    // Sisi kiri bawah
     path.lineTo(bottomRadius, size.height);
     path.arcToPoint(
       Offset(0, size.height - bottomRadius),
@@ -201,10 +208,9 @@ class BottomNavCurvePainter extends CustomPainter {
     );
 
     path.lineTo(0, topRadius);
-
     path.close();
 
-    canvas.drawShadow(path, Colors.black, 4, true);
+    canvas.drawShadow(path, Colors.black.withAlpha(51), 4, true);
     canvas.drawPath(path, paint);
   }
 

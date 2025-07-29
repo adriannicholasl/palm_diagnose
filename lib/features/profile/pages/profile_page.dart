@@ -271,7 +271,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: _isLoading
                               ? const SizedBox(
                                   width: 24,
-                                  height: 24,
+                                  height: 30,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: Colors.white,

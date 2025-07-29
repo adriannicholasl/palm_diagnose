@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:palm_diagnose/routers/app_routes.dart';
 import 'package:palm_diagnose/firebase_options.dart';
+
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
+
+import 'package:palm_diagnose/core/constants/dark_theme.dart';
+import 'package:palm_diagnose/core/constants/theme.dart';
 
 // Sesuaikan pathnya
 void main() async {
@@ -25,9 +29,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Palm Diagnose',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: lightTheme, // dari file terpisah
+      darkTheme: darkTheme, // dari file dark_theme.dart
+      themeMode: ThemeMode.system, // bisa diganti ke .dark atau .light
 
       initialRoute: AppRoutes.authGate,
       routes: AppRoutes.routes, // <-- ini penting
