@@ -52,7 +52,7 @@ class AppRoutes {
       }
     },
 
-    // ✅ Hasil Deteksi
+    // // ✅ Hasil Deteksi AWAL
     detectResult: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic> && args['results'] != null) {
@@ -91,7 +91,13 @@ class AppRoutes {
     detailHistory: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic>) {
-        return DetailHistoryPage(data: args);
+        return DetailHistoryPage(
+          imageUrl: args['imageUrl'],
+          label: args['label'],
+          model: args['model'],
+          confidence: args['confidence'],
+          date: args['date'],
+        );
       } else {
         return const Scaffold(
           body: Center(child: Text("Data history tidak ditemukan")),
@@ -121,7 +127,14 @@ class AppRoutes {
     adminDetailHistory: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic>) {
-        return admin_detail.DetailHistoryPage(data: args);
+        return admin_detail.DetailHistoryPage(
+          imageUrl: args['imageUrl'],
+          label: args['label'],
+          model: args['model'],
+          confidence: args['confidence'],
+          date: args['date'],
+          data: {},
+        );
       } else {
         return const Scaffold(
           body: Center(child: Text("Data history tidak ditemukan")),

@@ -8,7 +8,7 @@ class EmptyStateAnimation extends StatelessWidget {
   const EmptyStateAnimation({
     super.key,
     this.title = 'Oops!',
-    this.description = 'Data tidak ditemukan.',
+    this.description = 'Maaf halaman ini masih dikembangkan',
   });
 
   @override

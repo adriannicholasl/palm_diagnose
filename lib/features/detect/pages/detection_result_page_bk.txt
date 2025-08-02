@@ -77,8 +77,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
         dialogType: DialogType.warning,
         animType: AnimType.bottomSlide,
         title: 'GPS Tidak Aktif',
-        desc:
-            'Silakan aktifkan GPS terlebih dahulu sebelum menyimpan hasil deteksi.',
+        desc: 'Silakan aktifkan GPS terlebih dahulu sebelum menyimpan hasil deteksi.',
         btnOkText: 'Buka Pengaturan',
         btnOkOnPress: () async {
           final pos = await LocationService.getCurrentLocation();
@@ -150,10 +149,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
 
   Widget _buildDiseaseInfo(String label) {
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection('disease_info')
-          .doc(label)
-          .get(),
+      future: FirebaseFirestore.instance.collection('disease_info').doc(label).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Shimmer.fromColors(
@@ -197,29 +193,13 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Deskripsi',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              Text('Deskripsi', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(
-                data['description'] ?? '-',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(data['description'] ?? '-', style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 16),
-              Text(
-                'Penanganan',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
+              Text('Penanganan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(
-                data['treatment'] ?? '-',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text(data['treatment'] ?? '-', style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         );
@@ -253,10 +233,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
                 percent: result.confidence / 100,
                 center: Text(
                   "${result.confidence.toStringAsFixed(1)}%",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                 ),
                 circularStrokeCap: CircularStrokeCap.round,
                 progressColor: Colors.green,
@@ -271,11 +248,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: Colors.green,
-                              size: 18,
-                            ),
+                            const Icon(Icons.location_on, color: Colors.green, size: 18),
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
@@ -287,16 +260,8 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
                           ],
                         ),
                       ),
-                    Text(
-                      "Model: ${result.model}",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "Label: ${result.label}",
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                    Text("Model: ${result.model}", style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                    Text("Label: ${result.label}", style: Theme.of(context).textTheme.bodyMedium),
                   ],
                 ),
               ),
@@ -311,11 +276,11 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
   Widget build(BuildContext context) {
     final imageWidget = kIsWeb
         ? (widget.imageBytesWeb != null
-              ? Image.memory(widget.imageBytesWeb!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported))
+            ? Image.memory(widget.imageBytesWeb!, fit: BoxFit.cover)
+            : const Icon(Icons.image_not_supported))
         : (widget.imageFile != null
-              ? Image.file(widget.imageFile!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported));
+            ? Image.file(widget.imageFile!, fit: BoxFit.cover)
+            : const Icon(Icons.image_not_supported));
 
     return Stack(
       children: [
@@ -363,10 +328,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
                             children: [
                               ...widget.results.map(
                                 (result) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 8,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                                   child: _buildDetectionCard(result),
                                 ),
                               ),
@@ -380,13 +342,9 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed: _isSaving
-                                ? null
-                                : _saveResultsToFirestore,
+                            onPressed: _isSaving ? null : _saveResultsToFirestore,
                             icon: const Icon(Icons.save),
-                            label: Text(
-                              _isSaving ? "Menyimpan..." : "Simpan Hasil",
-                            ),
+                            label: Text(_isSaving ? "Menyimpan..." : "Simpan Hasil"),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               backgroundColor: Colors.green,

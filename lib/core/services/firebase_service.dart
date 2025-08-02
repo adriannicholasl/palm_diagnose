@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  String get currentUserId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Simpan hasil deteksi
   Future<void> saveDetectionResults({
@@ -56,5 +59,13 @@ class FirebaseService {
       }
     }
     return counts;
+  }
+
+  Future<Map<String, dynamic>?> getDiseaseInfo(String label) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('disease_info')
+        .doc(label)
+        .get();
+    return snapshot.data();
   }
 }

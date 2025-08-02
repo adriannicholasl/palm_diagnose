@@ -6,9 +6,12 @@ import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
 import 'package:palm_diagnose/features/admin/pages/admin_dashboard_page.dart';
 import 'package:palm_diagnose/features/admin/pages/data_user.dart';
+import 'package:palm_diagnose/features/main/widgets/empty_state_animation.dart';
 import 'package:palm_diagnose/features/user/pages/user_dashboard_page.dart';
 import 'package:palm_diagnose/features/user/pages/history_detect_page.dart';
+import 'package:palm_diagnose/features/common_info/pages/common_info_page.dart';
 import 'package:palm_diagnose/features/profile/pages/profile_page.dart';
+import 'package:animations/animations.dart';
 
 class HomePage extends StatefulWidget {
   final String role;
@@ -105,12 +108,7 @@ class _HomePageState extends State<HomePage> {
             });
           },
         ),
-        body: const Center(
-          child: Text(
-            "Fitur ini akan hadir di versi berikutnya.",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-        ),
+        body: const EmptyStateAnimation(),
       ),
       GradientScaffold(
         appBar: CustomTopAppBar(
@@ -130,7 +128,33 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       extendBody: true,
-      body: IndexedStack(index: _selectedIndex, children: pages),
+      body: PageTransitionSwitcher(
+        duration: const Duration(
+          milliseconds: 800,
+        ), // ⏱ Lebih lambat dari default
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutQuart, // 🌊 Smooth, lambat di awal & akhir
+          );
+          final curvedSecondary = CurvedAnimation(
+            parent: secondaryAnimation,
+            curve: Curves.easeInOutQuart,
+          );
+
+          return SharedAxisTransition(
+            animation: curvedAnimation,
+            secondaryAnimation: curvedSecondary,
+            transitionType: SharedAxisTransitionType
+                .scaled, // Ganti ke scaled kalau mau coba zoom
+            child: child,
+          );
+        },
+        child: KeyedSubtree(
+          key: ValueKey<int>(_selectedIndex),
+          child: pages[_selectedIndex],
+        ),
+      ),
       bottomNavigationBar: BottomNavBarCurvedFb1(
         currentIndex: _selectedIndex,
         onItemTapped: _onTabSelected,

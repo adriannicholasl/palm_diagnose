@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palm_diagnose/features/auth/pages/signin_page.dart';
-import 'package:palm_diagnose/features/main/pages/home_page.dart';
+import 'package:palm_diagnose/features/main/pages/home_gate.dart';
 import 'package:palm_diagnose/features/main/widgets/loading_animation.dart';
 
 class AuthGate extends StatefulWidget {
@@ -60,7 +60,7 @@ class _AuthGateState extends State<AuthGate> {
             final role = roleSnapshot.data;
 
             if (role == 'admin' || role == 'user') {
-              return HomePage(role: role!);
+              return HomeGate(role: role!);
             } else {
               return const Scaffold(
                 body: Center(

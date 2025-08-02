@@ -1,17 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:palm_diagnose/core/services/firebase_service.dart';
 
-class DetectionStatCardsRow extends StatelessWidget {
+class DetectionStatCardsRow extends StatefulWidget {
   final VoidCallback onStatTap;
   final VoidCallback onDetectTap;
+  final String uid; // Tambahkan uid
 
   const DetectionStatCardsRow({
     super.key,
     required this.onStatTap,
     required this.onDetectTap,
+    required this.uid,
   });
 
   @override
+  State<DetectionStatCardsRow> createState() => _DetectionStatCardsRowState();
+}
+
+class _DetectionStatCardsRowState extends State<DetectionStatCardsRow> {
+  int totalDeteksi = 0;
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTotalDeteksi();
+  }
+
+  Future<void> _loadTotalDeteksi() async {
+    final total = await FirebaseService().getDetectionCountByUser(widget.uid);
+    setState(() {
+      totalDeteksi = total;
+      isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final subtitleText = isLoading ? 'Memuat...' : '$totalDeteksi total';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
@@ -19,10 +46,10 @@ class DetectionStatCardsRow extends StatelessWidget {
           Expanded(
             child: _CardFb1(
               text: "Hasil Deteksi",
-              subtitle: "30+ total",
+              subtitle: subtitleText,
               imageUrl:
                   "https://firebasestorage.googleapis.com/v0/b/flutterbricks-public.appspot.com/o/illustrations%2Fundraw_Designer_re_5v95%201.png?alt=media&token=5d053bd8-d0ea-4635-abb6-52d87539b7e",
-              onPressed: onStatTap,
+              onPressed: widget.onStatTap,
               useGradient: false,
             ),
           ),
@@ -33,8 +60,8 @@ class DetectionStatCardsRow extends StatelessWidget {
               subtitle: "Akses cepat",
               imageUrl:
                   "https://firebasestorage.googleapis.com/v0/b/flutterbricks-public.appspot.com/o/illustrations%2Fundraw_Designer_re_5v95%201.png?alt=media&token=5d053bd8-d0ea-4635-abb6-52d87539b7e",
-              onPressed: onDetectTap,
-              useGradient: true, // 🌈 Apply gradient here
+              onPressed: widget.onDetectTap,
+              useGradient: true,
             ),
           ),
         ],
@@ -92,7 +119,7 @@ class _CardFb1 extends StatelessWidget {
         child: Column(
           children: [
             Image.network(imageUrl, height: 70),
-            const SizedBox(height: 8), // atau 12, tergantung kebutuhan
+            const SizedBox(height: 8),
             Text(
               text,
               textAlign: TextAlign.center,
