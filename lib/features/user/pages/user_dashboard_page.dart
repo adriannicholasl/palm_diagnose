@@ -1,17 +1,15 @@
-// lib/features/user/pages/user_home_page.dart
-
 import 'package:flutter/material.dart';
-import 'package:palm_diagnose/core/services/firebase_service.dart';
+import 'package:palm_diagnose/core/services/user_service.dart';
 
 class UserHomePage extends StatelessWidget {
   const UserHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final firebaseService = FirebaseService();
+    final userService = UserService();
 
     return FutureBuilder<Map<String, dynamic>?>(
-      future: firebaseService.getCurrentUserData(),
+      future: userService.getCurrentUserData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

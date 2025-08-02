@@ -1,26 +1,34 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:palm_diagnose/core/constants/app_colors.dart';
 import 'package:palm_diagnose/core/services/detection_service.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
+import 'package:palm_diagnose/core/services/user_service.dart';
+import 'package:palm_diagnose/core/services/location_service.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
+import 'package:palm_diagnose/features/main/widgets/loading_overlay.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:palm_diagnose/features/main/widgets/loading_animation.dart';
 
 class DetectionResultPage extends StatefulWidget {
   final File? imageFile;
   final Uint8List? imageBytesWeb;
   final List<DetectionResult> results;
+  final String filename;
 
   const DetectionResultPage({
-    Key? key,
+    super.key,
     this.imageFile,
     this.imageBytesWeb,
     required this.results,
-  }) : super(key: key);
+    required this.filename,
+  });
 
   @override
   State<DetectionResultPage> createState() => _DetectionResultPageState();
@@ -30,227 +38,339 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
   bool _isSaving = false;
   String _displayName = 'User';
   String? _photoUrl;
+  Position? _lastPosition;
+  String? _locationName;
+
+  String getMostConfidentLabel() {
+    if (widget.results.isEmpty) return '';
+    widget.results.sort((a, b) => b.confidence.compareTo(a.confidence));
+    return widget.results.first.label;
+  }
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+
+    if (AppLocationState.isAvailable) {
+      _lastPosition = AppLocationState.position;
+      _locationName = AppLocationState.locationName;
+    }
   }
 
   Future<void> _loadUserInfo() async {
     try {
-      final data = await FirebaseService().getCurrentUserData();
+      final data = await UserService().getCurrentUserData();
       setState(() {
         _displayName = data?['displayName'] ?? 'User';
         _photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
       });
     } catch (e) {
-      debugPrint('❌ Gagal ambil data: $e');
+      debugPrint('❌ Gagal ambil data user: $e');
     }
   }
 
   Future<void> _saveResultsToFirestore() async {
-    setState(() => _isSaving = true);
-
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Gagal menyimpan: User tidak ditemukan'),
-        ),
-      );
+    if (_lastPosition == null) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.warning,
+        animType: AnimType.bottomSlide,
+        title: 'GPS Tidak Aktif',
+        desc: 'Silakan aktifkan GPS terlebih dahulu sebelum menyimpan hasil deteksi.',
+        btnOkText: 'Buka Pengaturan',
+        btnOkOnPress: () async {
+          final pos = await LocationService.getCurrentLocation();
+          if (pos != null) {
+            final name = await LocationService.getAddressFromPosition(pos);
+            setState(() {
+              _lastPosition = pos;
+              _locationName = name;
+            });
+            AppLocationState.update(pos, name);
+            _saveResultsToFirestore(); // retry
+          } else {
+            AwesomeDialog(
+              context: context,
+              dialogType: DialogType.error,
+              title: 'Lokasi Gagal',
+              desc: '❌ Lokasi tetap tidak tersedia. Simpan dibatalkan.',
+              btnOkOnPress: () {},
+            ).show();
+          }
+        },
+        btnCancelText: 'Batal',
+        btnCancelOnPress: () {},
+      ).show();
       return;
     }
 
-    final filename = widget.imageFile != null
-        ? widget.imageFile!.path.split('/').last
-        : 'web_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    final resultsMap = widget.results.map((result) {
-      return {
-        'model': result.model,
-        'label': result.label,
-        'confidence': result.confidence,
-      };
-    }).toList();
+    setState(() => _isSaving = true);
 
     try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) throw Exception("User tidak login");
+
       await FirebaseService().saveDetectionResults(
         uid: uid,
-        filename: filename,
-        results: resultsMap,
+        filename: widget.filename,
+        results: widget.results.map((e) => e.toJson()).toList(),
+        location: {
+          'latitude': _lastPosition!.latitude,
+          'longitude': _lastPosition!.longitude,
+          'name': _locationName ?? '',
+        },
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Hasil berhasil disimpan ke Firestore'),
-          ),
-        );
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.success,
+          title: 'Berhasil',
+          desc: '✅ Hasil deteksi berhasil disimpan.',
+          btnOkOnPress: () {},
+        ).show();
       }
     } catch (e) {
       debugPrint("❌ Gagal simpan: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Gagal menyimpan hasil')),
-        );
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          title: 'Gagal',
+          desc: '❌ Gagal menyimpan hasil deteksi.',
+          btnOkOnPress: () {},
+        ).show();
       }
     } finally {
-      setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  Widget _buildDetectionCard(DetectionResult result) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgLight,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircularPercentIndicator(
-            radius: 45.0,
-            lineWidth: 10.0,
-            animation: true,
-            percent: result.confidence / 100,
-            center: Text(
-              "${result.confidence.toStringAsFixed(1)}%",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16.0,
+  Widget _buildDiseaseInfo(String label) {
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('disease_info').doc(label).get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              height: 100,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            circularStrokeCap: CircularStrokeCap.round,
-            progressColor: Colors.green,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Model: ${result.model}",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  "Label: ${result.label}",
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
+          );
+        }
+
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.green.shade100, Colors.green.shade300],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Deskripsi', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(data['description'] ?? '-', style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 16),
+              Text('Penanganan', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(data['treatment'] ?? '-', style: Theme.of(context).textTheme.bodyMedium),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetectionCard(DetectionResult result) {
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              CircularPercentIndicator(
+                radius: 45.0,
+                lineWidth: 10.0,
+                animation: true,
+                percent: result.confidence / 100,
+                center: Text(
+                  "${result.confidence.toStringAsFixed(1)}%",
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+                ),
+                circularStrokeCap: CircularStrokeCap.round,
+                progressColor: Colors.green,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_lastPosition != null && _locationName != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on, color: Colors.green, size: 18),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _locationName!,
+                                style: Theme.of(context).textTheme.bodySmall,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Text("Model: ${result.model}", style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                    Text("Label: ${result.label}", style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Gambar yang digunakan tergantung platform
     final imageWidget = kIsWeb
         ? (widget.imageBytesWeb != null
-              ? Image.memory(widget.imageBytesWeb!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported))
+            ? Image.memory(widget.imageBytesWeb!, fit: BoxFit.cover)
+            : const Icon(Icons.image_not_supported))
         : (widget.imageFile != null
-              ? Image.file(widget.imageFile!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported));
+            ? Image.file(widget.imageFile!, fit: BoxFit.cover)
+            : const Icon(Icons.image_not_supported));
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// Top Bar dengan cached profile image
-            CustomTopAppBar(
-              upperTitle: "Hasil",
-              title: _displayName,
-              profileImageUrl: _photoUrl,
-              onTapProfile: () {},
-            ),
-
-            /// Body utama
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                child: Column(
-                  children: [
-                    /// Gambar yang diprediksi
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        height: 200,
-                        width: double.infinity,
-                        child: imageWidget,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// Hasil prediksi per model
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: widget.results.length,
-                        itemBuilder: (context, index) {
-                          return _buildDetectionCard(widget.results[index]);
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    /// Tombol simpan
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isSaving ? null : _saveResultsToFirestore,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Icon(Icons.save),
-                        label: Text(
-                          _isSaving ? "Menyimpan..." : "Simpan Hasil",
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: SafeArea(
+            child: Column(
+              children: [
+                CustomTopAppBar(
+                  upperTitle: "Hasil",
+                  title: _displayName,
+                  profileImageUrl: _photoUrl,
+                  onTapProfile: () {},
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: SizedBox(
+                            height: 200,
+                            width: double.infinity,
+                            child: ShaderMask(
+                              shaderCallback: (rect) {
+                                return LinearGradient(
+                                  colors: [
+                                    Colors.white.withAlpha(51),
+                                    Colors.white.withAlpha(13),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(rect);
+                              },
+                              blendMode: BlendMode.srcATop,
+                              child: imageWidget,
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Expanded(
+                          child: ListView(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            children: [
+                              ...widget.results.map(
+                                (result) => Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                                  child: _buildDetectionCard(result),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              _buildDiseaseInfo(getMostConfidentLabel()),
+                              const SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: _isSaving ? null : _saveResultsToFirestore,
+                            icon: const Icon(Icons.save),
+                            label: Text(_isSaving ? "Menyimpan..." : "Simpan Hasil"),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
+          bottomNavigationBar: BottomNavBarCurvedFb1(
+            currentIndex: 1,
+            onItemTapped: (index) {
+              Navigator.popUntil(context, (route) => route.isFirst);
+            },
+            onFabPressed: () {},
+          ),
         ),
-      ),
-
-      /// Bottom navigation
-      bottomNavigationBar: BottomNavBarCurvedFb1(
-        currentIndex: 1,
-        onItemTapped: (index) {
-          Navigator.popUntil(context, (route) => route.isFirst);
-        },
-        onFabPressed: () {
-          // Optional: Arahkan ke halaman deteksi ulang jika diinginkan
-        },
-      ),
+        if (_isSaving) const LoadingOverlay(), // ✅ Lottie loading di atas
+      ],
     );
   }
 }

@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
-import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
 import 'package:palm_diagnose/core/constants/gradient_scaffold.dart';
-import 'package:palm_diagnose/features/main/pages/home_page.dart';
+import 'package:intl/intl.dart';
 
 class UserDetectionHistoryPage extends StatefulWidget {
   final String uid;
@@ -31,9 +30,10 @@ class ChartData {
   ChartData(this.x, this.y);
 }
 
+// ... (import tetap sama)
+
 class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
     with SingleTickerProviderStateMixin {
-  int currentIndex = 1;
   final firebaseService = FirebaseService();
   late AnimationController _controller;
 
@@ -44,23 +44,6 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
       duration: const Duration(milliseconds: 500),
       vsync: this,
     )..forward();
-  }
-
-  void onItemTapped(int index) {
-    Navigator.of(context).popUntil((route) => route.isFirst);
-
-    // Delay sebentar agar pop selesai sebelum push
-    Future.delayed(const Duration(milliseconds: 50), () {
-      // Kirim tab index ke HomePage lewat arguments atau global
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => HomePage(
-            role: 'admin',
-            initialIndex: 1, // atau index yang kamu inginkan
-          ),
-        ),
-      );
-    });
   }
 
   LinearGradient _getConfidenceGradient(double confidence) {
@@ -89,6 +72,7 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final double fixedImageHeight = 60;
 
     return GradientScaffold(
       appBar: CustomTopAppBar(
@@ -97,14 +81,7 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
         profileImageUrl: widget.photoUrl,
         onTapProfile: () {},
         showBackButton: true,
-        onBack: () {
-          Navigator.pop(context); // custom aksi
-        },
-      ),
-      bottomNavigationBar: BottomNavBarCurvedFb1(
-        currentIndex: currentIndex,
-        onItemTapped: onItemTapped,
-        onFabPressed: () {}, // TODO: implement
+        onBack: () => Navigator.pop(context),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: firebaseService.getUserDetections(widget.uid),
@@ -124,10 +101,14 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
             return const Center(child: Text("📭 Belum ada hasil deteksi."));
           }
 
-          // Flattened list: 1 result = 1 card
           final items = docs.expand((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final filename = data['filename'] ?? '';
+            final createdAt = data['createdAt']; // <== ambil dari firestore
+            final date = (createdAt is Timestamp)
+                ? createdAt.toDate()
+                : DateTime.now(); // fallback kalau null
+
             final results = List<Map<String, dynamic>>.from(
               data['results'] ?? [],
             );
@@ -137,13 +118,14 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
                 'label': result['label'] ?? '-',
                 'confidence': (result['confidence'] as num?)?.toDouble() ?? 0.0,
                 'imageUrl':
-                    'https://d8a7804a7815.ngrok-free.app/uploads/$filename',
+                    'https://cad0f9e558f6.ngrok-free.app/uploads/$filename',
+                'date': date, // kirim ke UI
               },
             );
           }).toList();
 
           return ListView.builder(
-            padding: const EdgeInsets.only(bottom: 100),
+            padding: const EdgeInsets.only(top: 10, bottom: 100),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
@@ -151,6 +133,10 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
               final label = item['label'];
               final confidence = item['confidence'];
               final imageUrl = item['imageUrl'];
+              final date = item['date'] as DateTime;
+              final formattedDate = DateFormat(
+                'dd MMM yyyy, HH:mm',
+              ).format(date);
 
               final fade = CurvedAnimation(
                 parent: _controller,
@@ -160,125 +146,209 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
                 parent: _controller,
                 curve: Curves.decelerate,
               );
+              final slide =
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.1),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+                  );
 
               return FadeTransition(
                 opacity: fade,
-                child: ScaleTransition(
-                  scale: scale,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF1E1E1E)
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withAlpha(51)
-                                  : Colors.grey.withAlpha(21),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 6,
+                child: SlideTransition(
+                  position: slide,
+                  child: ScaleTransition(
+                    scale: scale,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 25,
+                            vertical: 12,
                           ),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              imageUrl,
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                              headers: const {
-                                'ngrok-skip-browser-warning': 'true',
-                              },
-                              errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.broken_image),
-                            ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? const Color(0xFF1E1E1E)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isDark
+                                    ? Colors.black.withAlpha(51)
+                                    : Colors.grey.withAlpha(26),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          title: Text(
-                            model,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          subtitle: Text(
-                            label,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 12,
-                              color: theme.textTheme.bodySmall?.color
-                                  ?.withAlpha(150),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 🎯 Confidence Chart Badge
-                      Positioned(
-                        top: -12,
-                        right: 12,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              height: 72,
-                              width: 72,
-                              child: SfCircularChart(
-                                margin: EdgeInsets.zero,
-                                series: <CircularSeries>[
-                                  RadialBarSeries<ChartData, String>(
-                                    dataSource: [
-                                      ChartData('Confidence', confidence),
-                                    ],
-                                    maximumValue: 100,
-                                    radius: '90%',
-                                    innerRadius: '75%',
-                                    cornerStyle: CornerStyle.bothCurve,
-                                    trackOpacity: 0.2,
-                                    gap: '3%',
-                                    pointShaderMapper: (data, _, color, rect) {
-                                      return _getConfidenceGradient(
-                                        confidence,
-                                      ).createShader(rect);
-                                    },
-                                    dataLabelSettings: const DataLabelSettings(
-                                      isVisible: false,
-                                    ),
-                                    xValueMapper: (ChartData data, _) => data.x,
-                                    yValueMapper: (ChartData data, _) => data.y,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: Row(
+                              children: [
+                                // Gambar kiri dengan tinggi tetap dan radius
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(14),
+                                    bottomLeft: Radius.circular(14),
                                   ),
-                                ],
-                              ),
+                                  child: SizedBox(
+                                    width: 80,
+                                    height: fixedImageHeight, // fix height
+                                    child: Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      headers: const {
+                                        'ngrok-skip-browser-warning': 'true',
+                                      },
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                // Konten teks
+                                Expanded(
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight:
+                                          fixedImageHeight, // agar teks nggak terlalu kecil
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            model,
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontFamily: 'Poppins',
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text.rich(
+                                            TextSpan(
+                                              children: [
+                                                const TextSpan(text: 'Hasil: '),
+                                                TextSpan(
+                                                  text: label,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontFamily: 'Poppins',
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            formattedDate,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  fontSize: 11,
+                                                  color: isDark
+                                                      ? Colors.grey[500]
+                                                      : Colors.grey[700],
+                                                  fontFamily: 'Poppins',
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              '${confidence.toStringAsFixed(0)}%',
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+
+                        // Chart badge
+                        Positioned(
+                          top: -10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDark
+                                  ? const Color(0xFF1E1E1E)
+                                  : Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(13),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                SizedBox(
+                                  height: 66,
+                                  width: 66,
+                                  child: SfCircularChart(
+                                    margin: EdgeInsets.zero,
+                                    series: <CircularSeries>[
+                                      RadialBarSeries<ChartData, String>(
+                                        dataSource: [
+                                          ChartData('Confidence', confidence),
+                                        ],
+                                        maximumValue: 100,
+                                        radius: '90%',
+                                        innerRadius: '75%',
+                                        cornerStyle: CornerStyle.bothCurve,
+                                        trackOpacity: 0.2,
+                                        gap: '3%',
+                                        pointShaderMapper:
+                                            (data, _, color, rect) {
+                                              return _getConfidenceGradient(
+                                                confidence,
+                                              ).createShader(rect);
+                                            },
+                                        dataLabelSettings:
+                                            const DataLabelSettings(
+                                              isVisible: false,
+                                            ),
+                                        xValueMapper: (ChartData data, _) =>
+                                            data.x,
+                                        yValueMapper: (ChartData data, _) =>
+                                            data.y,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '${confidence.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    fontFamily: 'Poppins',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.onSurface
+                                        .withAlpha(178),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

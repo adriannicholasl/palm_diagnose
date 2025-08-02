@@ -102,8 +102,8 @@ class _UserTileCardState extends State<UserTileCard>
                 boxShadow: [
                   BoxShadow(
                     color: isDark
-                        ? Colors.black.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.05),
+                        ? Colors.black.withAlpha(51)
+                        : Colors.grey.withAlpha(26),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),

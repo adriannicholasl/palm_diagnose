@@ -1,8 +1,12 @@
-import 'package:palm_diagnose/global.dart';
+// import 'package:palm_diagnose/global.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:palm_diagnose/core/services/user_service.dart';
 
 class AuthController {
   final _auth = FirebaseAuth.instance;
-  final _firebaseService = FirebaseService();
+  final _userService = UserService();
 
   Future<String?> loginWithEmailAndPassword({
     required String email,
@@ -13,7 +17,7 @@ class AuthController {
         email: email,
         password: password,
       );
-      await _firebaseService.saveUserToFirestore(result.user!);
+      await _userService.saveUserToFirestore(result.user!);
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -35,7 +39,7 @@ class AuthController {
       );
 
       final result = await _auth.signInWithCredential(credential);
-      await _firebaseService.saveUserToFirestore(result.user!);
+      await _userService.saveUserToFirestore(result.user!);
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -56,9 +60,13 @@ class AuthController {
       }
 
       await FirebaseAuth.instance.signOut(); // Logout Firebase terakhir
-      print('Logout berhasil.');
+      if (kDebugMode) {
+        print('Logout berhasil.');
+      }
     } catch (e) {
-      print('Logout error: $e');
+      if (kDebugMode) {
+        print('Logout error: $e');
+      }
     }
   }
 
@@ -80,7 +88,7 @@ class AuthController {
 
       // Simpan ke Firestore
       final user = result.user!;
-      await _firebaseService.saveUserToFirestore(
+      await _userService.saveUserToFirestore(
         user,
         additionalData: {'username': username, 'phone': phone},
       );

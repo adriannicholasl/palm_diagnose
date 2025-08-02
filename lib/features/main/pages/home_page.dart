@@ -1,27 +1,18 @@
-import 'dart:io' as io;
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-
 import 'package:palm_diagnose/core/constants/gradient_scaffold.dart';
-import 'package:palm_diagnose/core/services/firebase_service.dart';
+import 'package:palm_diagnose/core/utils/user_utils.dart';
+import 'package:palm_diagnose/core/utils/detect_navigator.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
 import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
-
 import 'package:palm_diagnose/features/admin/pages/admin_dashboard_page.dart';
 import 'package:palm_diagnose/features/admin/pages/data_user.dart';
 import 'package:palm_diagnose/features/user/pages/user_dashboard_page.dart';
 import 'package:palm_diagnose/features/user/pages/history_detect_page.dart';
-import 'package:palm_diagnose/features/detect/pages/detect_page.dart';
 import 'package:palm_diagnose/features/profile/pages/profile_page.dart';
-
-import 'package:palm_diagnose/core/utils/dialog_utils.dart';
 
 class HomePage extends StatefulWidget {
   final String role;
   final int initialIndex;
-
 
   const HomePage({super.key, required this.role, this.initialIndex = 0});
 
@@ -42,25 +33,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadUserInfo() async {
-    final user = FirebaseService.currentUser;
-    if (user != null) {
-      try {
-        final snapshot = await FirebaseService().getCurrentUserData();
-        final data = snapshot;
-
-        setState(() {
-          _displayName =
-              data?['displayName'] ??
-              (widget.role == 'admin' ? 'Admin' : 'User');
-          _photoUrl = user.photoURL;
-        });
-      } catch (e) {
-        debugPrint('❌ Gagal memuat data user: $e');
-        setState(() {
-          _displayName = widget.role == 'admin' ? 'Admin' : 'User';
-        });
-      }
-    }
+    final result = await UserUtils.loadUserInfo(widget.role);
+    setState(() {
+      _displayName = result['name'];
+      _photoUrl = result['photoUrl'];
+    });
   }
 
   void _onTabSelected(int index) {
@@ -70,36 +47,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onFabPressed() {
-    DialogUtils.showImageSourceActionSheet(context, (source) async {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(
-        source: source,
-        imageQuality: null,
-        maxWidth: null,
-        maxHeight: null,
-        preferredCameraDevice: CameraDevice.rear,
-      );
-
-      if (pickedFile != null) {
-        if (!context.mounted) return;
-
-        if (kIsWeb) {
-          final Uint8List imageBytes = await pickedFile.readAsBytes();
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DetectPage(imageBytesWeb: imageBytes),
-            ),
-          );
-        } else {
-          final io.File file = io.File(pickedFile.path);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => DetectPage(imageFile: file)),
-          );
-        }
-      }
-    });
+    DetectNavigator.startDetection(context);
   }
 
   List<Widget> _buildPages() {
@@ -133,38 +81,37 @@ class _HomePageState extends State<HomePage> {
               ),
               body: const DataUserPage(),
             )
-          : FutureBuilder<Map<String, dynamic>?>(
-              future: FirebaseService().getCurrentUserData(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data == null) {
-                  return const Center(
-                    child: Text("Gagal memuat data pengguna."),
-                  );
-                }
-
-                final displayName = snapshot.data!['displayName'] ?? 'User';
-
-                return GradientScaffold(
-                  appBar: CustomTopAppBar(
-                    upperTitle: "Riwayat",
-                    title: displayName, // ✅ FIXED di sini
-                    profileImageUrl: _photoUrl,
-                    onTapProfile: () {
-                      setState(() {
-                        _selectedIndex = 3;
-                      });
-                    },
-                  ),
-                  body: HistoryDetectPage(displayName: displayName),
-                );
-              },
+          : GradientScaffold(
+              appBar: CustomTopAppBar(
+                upperTitle: "Riwayat",
+                title: _displayName,
+                profileImageUrl: _photoUrl,
+                onTapProfile: () {
+                  setState(() {
+                    _selectedIndex = 3;
+                  });
+                },
+              ),
+              body: HistoryDetectPage(displayName: _displayName),
             ),
-
-      const Placeholder(), // tombol 4 (kosong untuk sementara)
+      GradientScaffold(
+        appBar: CustomTopAppBar(
+          upperTitle: "Fitur",
+          title: "Belum Tersedia",
+          profileImageUrl: _photoUrl,
+          onTapProfile: () {
+            setState(() {
+              _selectedIndex = 3;
+            });
+          },
+        ),
+        body: const Center(
+          child: Text(
+            "Fitur ini akan hadir di versi berikutnya.",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ),
       GradientScaffold(
         appBar: CustomTopAppBar(
           upperTitle: "Akun",

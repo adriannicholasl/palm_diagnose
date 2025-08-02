@@ -1,5 +1,5 @@
-import 'package:palm_diagnose/global.dart';
 import 'dart:math';
+import 'package:palm_diagnose/global.dart';
 
 class HistoryDetectPage extends StatelessWidget {
   final String displayName;
@@ -53,7 +53,7 @@ class HistoryDetectPage extends StatelessWidget {
                   final confidence =
                       (result['confidence'] as num?)?.toDouble() ?? 0.0;
                   final imageUrl =
-                      'https://d8a7804a7815.ngrok-free.app/uploads/$filename';
+                      'https://cad0f9e558f6.ngrok-free.app/uploads/$filename';
 
                   return Card(
                     margin: const EdgeInsets.symmetric(

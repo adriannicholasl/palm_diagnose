@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -22,7 +23,7 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final statusBarHeight = MediaQuery.of(context).padding.top;
+    // final statusBarHeight = MediaQuery.of(context).padding.top;
 
     return AppBar(
       automaticallyImplyLeading: false,
@@ -30,12 +31,20 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       toolbarHeight: null,
+
+      // ✅ INI PENTING
+      systemOverlayStyle: isDark
+          ? SystemUiOverlayStyle
+                .light // Putih untuk status bar icon (dark background)
+          : SystemUiOverlayStyle
+                .dark, // Hitam untuk status bar icon (light background)
+
       flexibleSpace: SafeArea(
         child: Padding(
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            top: showBackButton ? 0 : 12, // Bukan statusBarHeight
+            top: showBackButton ? 0 : 12,
             bottom: 12,
           ),
           child: Column(
@@ -44,9 +53,14 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               if (showBackButton)
                 Padding(
-                  padding: const EdgeInsets.only(left: 10, top: 10, bottom: 10),
+                  padding: const EdgeInsets.only(top: 10, bottom: 10),
                   child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: theme.iconTheme.color),
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: theme.iconTheme.color,
+                      size: 32,
+                    ),
+                    iconSize: 32,
                     onPressed: onBack ?? () => Navigator.of(context).maybePop(),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -129,5 +143,6 @@ class CustomTopAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   /// Kembalikan nilai besar agar cukup menampung semua konten
   @override
-  Size get preferredSize => Size.fromHeight(showBackButton ? 120 : 80);
+  Size get preferredSize => Size.fromHeight(showBackButton ? 140 : 80);
+  // Size get preferredSize => const Size.fromHeight(140);
 }

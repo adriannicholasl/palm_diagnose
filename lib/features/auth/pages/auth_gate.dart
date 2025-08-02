@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:palm_diagnose/features/auth/pages/signin_page.dart';
 import 'package:palm_diagnose/features/main/pages/home_page.dart';
-
-/// Pastikan file ini sudah ada
+import 'package:palm_diagnose/features/main/widgets/loading_animation.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -33,14 +32,16 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        // ⏳ Loading saat Firebase sedang mengecek auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: LoadingAnimation(), // ✅ Lottie loading di sini
           );
         }
 
+        // 👤 Belum login
         if (!snapshot.hasData || snapshot.data == null) {
-          return const SignInScreen(); // belum login
+          return const SignInScreen();
         }
 
         final user = snapshot.data!;
@@ -49,16 +50,17 @@ class _AuthGateState extends State<AuthGate> {
         return FutureBuilder<String?>(
           future: _getUserRole(user.uid),
           builder: (context, roleSnapshot) {
+            // ⏳ Loading saat ambil role dari Firestore
             if (roleSnapshot.connectionState != ConnectionState.done) {
               return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                body: LoadingAnimation(), // ✅ Ganti dengan Lottie
               );
             }
 
             final role = roleSnapshot.data;
 
             if (role == 'admin' || role == 'user') {
-              return HomePage(role: role!); // arahkan ke MainNavigation
+              return HomePage(role: role!);
             } else {
               return const Scaffold(
                 body: Center(
