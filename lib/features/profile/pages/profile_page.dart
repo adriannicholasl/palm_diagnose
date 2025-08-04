@@ -229,17 +229,20 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildProfileHeader(),
-              const SizedBox(height: 16),
-              ..._buildFormFields(),
-              const SizedBox(height: 24),
-              _buildActionButtons(),
-            ],
+        return SafeArea(
+          bottom: false, // biar tombol tetap bisa nempel ke bawah
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildProfileHeader(),
+                const SizedBox(height: 16),
+                ..._buildFormFields(),
+                const SizedBox(height: 24),
+                _buildActionButtons(),
+              ],
+            ),
           ),
         );
       },

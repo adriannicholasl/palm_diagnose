@@ -64,10 +64,31 @@ class NewsCarousel extends StatelessWidget {
               return GestureDetector(
                 onTap: () async {
                   final url = Uri.parse(item['url']!);
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
+
+                  try {
+                    final launched = await launchUrl(
+                      url,
+                      mode: LaunchMode.externalApplication,
+                    );
+
+                    if (!launched) {
+                      debugPrint('Fallback launching URL...');
+                      await launchUrl(url); // Default mode
+                    }
+                  } catch (e) {
+                    debugPrint('Gagal membuka link: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Gagal membuka berita. Coba buka secara manual.',
+                          ),
+                        ),
+                      );
+                    }
                   }
                 },
+
                 child: Container(
                   width: 260,
                   height: 150,

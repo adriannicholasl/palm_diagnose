@@ -61,66 +61,72 @@ class _UserHomePageState extends State<UserHomePage> {
   }
 
   Widget _buildContent({required String uid, required String role}) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LocationSection(
-            locationName: _locationText,
-            onDetectLocation: _detectLocation,
-          ),
-          const SizedBox(height: 20),
-          SimpleCalendarRow(selectedDate: selectedDate),
-          const SizedBox(height: 20),
-          const BannerCarousel(),
-          const SizedBox(height: 24),
-          DetectionStatCardsRow(
-            uid: uid,
-            onStatTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => HomePage(role: role, initialIndex: 1),
-                ),
-              );
-            },
-            onDetectTap: () {
-              DetectNavigator.startDetection(context);
-            },
-          ),
-          const SizedBox(height: 35),
-          const NotificationStackCard(),
-          const SizedBox(height: 20),
-          const NewsCarousel(),
-          const SizedBox(height: 40),
-        ],
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 16, bottom: 80),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LocationSection(
+              locationName: _locationText,
+              onDetectLocation: _detectLocation,
+            ),
+            const SizedBox(height: 20),
+            SimpleCalendarRow(selectedDate: selectedDate),
+            const SizedBox(height: 20),
+            const BannerCarousel(),
+            const SizedBox(height: 24),
+            DetectionStatCardsRow(
+              uid: uid,
+              onStatTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => HomePage(role: role, initialIndex: 1),
+                  ),
+                );
+              },
+              onDetectTap: () {
+                DetectNavigator.startDetection(context);
+              },
+            ),
+            const SizedBox(height: 35),
+            const NotificationStackCard(),
+            const SizedBox(height: 20),
+            const NewsCarousel(),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildShimmerLayout() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(top: 16, bottom: 80),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LocationSection(
-            locationName: "Memuat lokasi...",
-            onDetectLocation: () {},
-          ),
-          const SizedBox(height: 20),
-          const SimpleCalendarRowShimmer(),
-          const SizedBox(height: 20),
-          const BannerCarouselShimmer(),
-          const SizedBox(height: 24),
-          const DetectionStatCardsRowShimmer(),
-          const SizedBox(height: 35),
-          const NotificationStackCardShimmer(),
-          const SizedBox(height: 20),
-          const NewsCarouselShimmer(),
-          const SizedBox(height: 40),
-        ],
+    return SafeArea(
+      bottom: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 16, bottom: 80),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LocationSection(
+              locationName: "Memuat lokasi...",
+              onDetectLocation: () {},
+            ),
+            const SizedBox(height: 20),
+            const SimpleCalendarRowShimmer(),
+            const SizedBox(height: 20),
+            const BannerCarouselShimmer(),
+            const SizedBox(height: 24),
+            const DetectionStatCardsRowShimmer(),
+            const SizedBox(height: 35),
+            const NotificationStackCardShimmer(),
+            const SizedBox(height: 20),
+            const NewsCarouselShimmer(),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }

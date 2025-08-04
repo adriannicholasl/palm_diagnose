@@ -1,155 +1,354 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:palm_diagnose/core/constants/gradient_scaffold.dart';
-import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
 
-class DetailHistoryPage extends StatelessWidget {
+class DetailHistoryPage extends StatefulWidget {
   final String imageUrl;
   final String label;
   final String model;
   final double confidence;
   final DateTime date;
-  final FirebaseService firebaseService = FirebaseService();
+  final String location;
+  final Map<String, dynamic> data;
 
-  DetailHistoryPage({
+  const DetailHistoryPage({
     super.key,
     required this.imageUrl,
     required this.label,
     required this.model,
     required this.confidence,
-    required this.date, required Map<String, dynamic> data,
+    required this.date,
+    required this.location,
+    required this.data,
   });
+
+  @override
+  State<DetailHistoryPage> createState() => _DetailHistoryPageState();
+}
+
+class _DetailHistoryPageState extends State<DetailHistoryPage>
+    with SingleTickerProviderStateMixin {
+  final FirebaseService firebaseService = FirebaseService();
+
+  late AnimationController _controller;
+  late Animation<double> _fadeAnim;
+  late Animation<Offset> _slideAnim;
+
+  String description = 'Memuat deskripsi...';
+  String treatment = 'Memuat rekomendasi...';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _fadeAnim = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _loadDiseaseInfo(); // ✅ ambil data dari Firestore
+    _controller.forward();
+  }
+
+  Future<void> _loadDiseaseInfo() async {
+    final labelKey = widget.label.replaceAll(' ', '_'); // normalisasi label
+    final info = await firebaseService.getDiseaseInfo(labelKey);
+    if (mounted) {
+      setState(() {
+        description = info?['description'] ?? 'Tidak ada deskripsi.';
+        treatment = info?['treatment'] ?? 'Tidak ada rekomendasi.';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   LinearGradient _getConfidenceGradient(double confidence) {
     if (confidence >= 70) {
       return const LinearGradient(
         colors: [Color(0xFFA2EBA6), Color(0xFF28782C)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
       );
     } else if (confidence >= 40) {
       return const LinearGradient(
         colors: [Color(0xFFE6D969), Color(0xFFF7BC25)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
       );
     } else {
       return const LinearGradient(
         colors: [Color(0xFFF77270), Color(0xFFCB2626)],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
       );
     }
+  }
+
+  String _getConfidenceStatus(double value) {
+    if (value >= 70) return '🟢 Sangat Yakin';
+    if (value >= 40) return '🟠 Cukup Yakin';
+    return '🔴 Kurang Yakin';
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dateText = DateFormat('dd MMMM yyyy, HH:mm').format(widget.date);
+    final deskripsi = description;
+    final penanganan = treatment;
 
-    return GradientScaffold(
-      appBar: CustomTopAppBar(
-        upperTitle: 'Detail',
-        title: 'Hasil Deteksi',
-        showBackButton: true,
-        onTapProfile: () {},
-      ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: firebaseService.getDiseaseInfo(label),
-        builder: (context, snapshot) {
-          final diseaseInfo = snapshot.data ?? {};
-          final deskripsi = diseaseInfo['deskripsi'] ?? 'Tidak ada deskripsi.';
-          final treatment =
-              diseaseInfo['treatment'] ?? 'Tidak ada rekomendasi.';
-
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  height: 200,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Metode Deteksi: $model',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tanggal: ${DateFormat('dd MMMM yyyy, HH:mm').format(date)}',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: SizedBox(
-                  height: 160,
-                  width: 160,
-                  child: SfCircularChart(
-                    margin: EdgeInsets.zero,
-                    series: <CircularSeries>[
-                      RadialBarSeries<_ChartData, String>(
-                        dataSource: [_ChartData('Confidence', confidence)],
-                        maximumValue: 100,
-                        radius: '100%',
-                        innerRadius: '75%',
-                        gap: '3%',
-                        cornerStyle: CornerStyle.bothCurve,
-                        trackOpacity: 0.15,
-                        pointShaderMapper: (_, __, ___, rect) =>
-                            _getConfidenceGradient(
-                              confidence,
-                            ).createShader(rect),
-                        dataLabelSettings: const DataLabelSettings(
-                          isVisible: false,
-                        ),
-                        xValueMapper: (_ChartData data, _) => data.x,
-                        yValueMapper: (_ChartData data, _) => data.y,
-                      ),
-                    ],
-                    annotations: <CircularChartAnnotation>[
-                      CircularChartAnnotation(
-                        widget: Text(
-                          '${confidence.toStringAsFixed(1)}%',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                automaticallyImplyLeading: false,
+                backgroundColor: Colors.transparent,
+                expandedHeight: 240,
+                stretch: true,
+                pinned: false,
+                flexibleSpace: FlexibleSpaceBar(
+                  stretchModes: const [
+                    StretchMode.zoomBackground,
+                    StretchMode.blurBackground,
+                  ],
+                  background: Hero(
+                    tag: widget.imageUrl,
+                    child: Image.network(
+                      widget.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.broken_image, size: 60),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Deskripsi Penyakit',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor.withOpacity(0.96),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(24),
+                      topRight: Radius.circular(24),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FadeTransition(
+                          opacity: _fadeAnim,
+                          child: SlideTransition(
+                            position: _slideAnim,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '📌 Informasi Deteksi',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                _buildInfoRow(
+                                  'Metode Deteksi',
+                                  widget.model,
+                                  theme,
+                                ),
+                                _buildInfoRow(
+                                  'Penyakit',
+                                  widget.label.replaceAll('_', ' '),
+                                  theme,
+                                ),
+                                _buildInfoRow('Tanggal', dateText, theme),
+                                _buildInfoRow('Lokasi', widget.location, theme),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: theme.cardColor,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.06),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                height: 90,
+                                width: 90,
+                                child: SfCircularChart(
+                                  margin: EdgeInsets.zero,
+                                  series: <CircularSeries>[
+                                    RadialBarSeries<_ChartData, String>(
+                                      dataSource: [
+                                        _ChartData(
+                                          'Confidence',
+                                          widget.confidence,
+                                        ),
+                                      ],
+                                      maximumValue: 100,
+                                      radius: '100%',
+                                      innerRadius: '75%',
+                                      cornerStyle: CornerStyle.bothCurve,
+                                      trackOpacity: 0.15,
+                                      pointShaderMapper: (_, __, ___, rect) =>
+                                          _getConfidenceGradient(
+                                            widget.confidence,
+                                          ).createShader(rect),
+                                      dataLabelSettings:
+                                          const DataLabelSettings(
+                                            isVisible: false,
+                                          ),
+                                      xValueMapper: (_ChartData data, _) =>
+                                          data.x,
+                                      yValueMapper: (_ChartData data, _) =>
+                                          data.y,
+                                    ),
+                                  ],
+                                  annotations: <CircularChartAnnotation>[
+                                    CircularChartAnnotation(
+                                      widget: Text(
+                                        '${widget.confidence.toStringAsFixed(1)}%',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _getConfidenceStatus(widget.confidence),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Tingkat keyakinan model terhadap hasil deteksi.',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          '🦠 Deskripsi Penyakit',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(deskripsi, style: theme.textTheme.bodyMedium),
+                        const SizedBox(height: 24),
+                        Text(
+                          '💊 Rekomendasi Penanganan',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(penanganan, style: theme.textTheme.bodyMedium),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(deskripsi, style: theme.textTheme.bodyMedium),
-              const SizedBox(height: 24),
-              Text(
-                'Rekomendasi Penanganan',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(treatment, style: theme.textTheme.bodyMedium),
             ],
-          );
-        },
+          ),
+
+          // Tombol kembali
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ),
+          ),
+
+          // Floating Action
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // TODO: Aksi tombol
+              },
+              icon: const Icon(Icons.medical_information_outlined),
+              label: const Text('Lihat Info Penyakit Lengkap'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: Colors.green[700],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String title, String value, ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text('$title:', style: theme.textTheme.bodyMedium),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

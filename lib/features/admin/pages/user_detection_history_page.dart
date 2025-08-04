@@ -111,6 +111,8 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
           final items = docs.expand((doc) {
             final data = doc.data() as Map<String, dynamic>;
             final filename = data['filename'] ?? '';
+            final locationName =
+                data['location']?['name'] ?? ''; // ✅ tambahkan ini
             final createdAt = data['createdAt']; // <== ambil dari firestore
             final date = (createdAt is Timestamp)
                 ? createdAt.toDate()
@@ -125,8 +127,9 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
                 'label': result['label'] ?? '-',
                 'confidence': (result['confidence'] as num?)?.toDouble() ?? 0.0,
                 'imageUrl':
-                    'https://cad0f9e558f6.ngrok-free.app/uploads/$filename',
+                    'https://64c9fd645cff.ngrok-free.app/uploads/$filename',
                 'date': date, // kirim ke UI
+                'location': locationName,
               },
             );
           }).toList();
@@ -145,7 +148,8 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
             itemBuilder: (context, index) {
               final item = items[index];
               final model = item['model'];
-              final label = item['label'];
+              final label = item['label'].replaceAll('_', ' ');
+
               final confidence = item['confidence'];
               final imageUrl = item['imageUrl'];
               final date = item['date'] as DateTime;
@@ -186,6 +190,8 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
                             'model': model,
                             'confidence': confidence,
                             'date': date,
+                            'location':
+                                item['location'] ?? '', // ✅ pastikan ada
                           },
                         );
                       },
@@ -224,7 +230,11 @@ class _UserDetectionHistoryPageState extends State<UserDetectionHistoryPage>
                                         model: model,
                                         label: label,
                                         confidence: confidence,
-                                        date: date, data: {},
+                                        date: date,
+                                        data: {},
+                                        location:
+                                            item['location'] ??
+                                            '', // ✅ pakai dari item // ✅ pastikan ada
                                       ),
                                     ),
                                   );

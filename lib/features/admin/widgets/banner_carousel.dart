@@ -12,9 +12,9 @@ class _BannerCarouselState extends State<BannerCarousel> {
   int _currentPage = 0;
 
   final List<String> banners = [
-    'https://picsum.photos/id/1011/600/300', // contoh: kelapa pantai
-    'https://picsum.photos/id/1025/600/300', // anjing lucu (sementara)
-    'https://picsum.photos/id/1043/600/300', // pemandangan alam
+    'assets/images/banner1.jpg',
+    'assets/images/banner2.jpg',
+    'assets/images/banner3.webp', // pemandangan alam
   ];
 
   @override
@@ -50,27 +50,11 @@ class _BannerCarouselState extends State<BannerCarousel> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
+                      child: Image.asset(
                         banners[index],
                         fit: BoxFit.cover,
+                        height: 170, // tinggi yang kamu set di widget utama
                         width: double.infinity,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: isDark ? Colors.grey[800] : Colors.grey[300],
-                            child: const Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) => Container(
-                          color: Colors.grey,
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'Gagal memuat gambar',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
                       ),
                     ),
                   ),

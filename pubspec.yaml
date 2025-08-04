@@ -44,11 +44,6 @@ dependencies:
   flutter_spinkit: ^5.2.0
   shimmer: ^3.0.0
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^5.0.0
-
 flutter:
   uses-material-design: true
 
@@ -76,3 +71,25 @@ flutter:
         - asset: assets/fonts/Roboto-Medium.ttf
           weight: 400
         - asset: assets/fonts/Roboto-Bold.ttf
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.3.5
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  background_color: "#083021" # warna background Android
+  remove_alpha_ios: true
+
+flutter_native_splash:
+  color: "#083021" # background splash
+  image: assets/images/logo_combined.png # logo utama
+  fullscreen: true
+  android_12:
+    image: assets/images/logo_combined_android12.png
+    icon_background_color: "#083021"

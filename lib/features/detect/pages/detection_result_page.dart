@@ -1,20 +1,18 @@
+// detection_result_page.dart (FINAL REFACTORED VERSION)
+
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:palm_diagnose/core/services/detection_service.dart';
 import 'package:palm_diagnose/core/services/firebase_service.dart';
-import 'package:palm_diagnose/core/services/user_service.dart';
 import 'package:palm_diagnose/core/services/location_service.dart';
-import 'package:palm_diagnose/features/main/widgets/custom_top_appbar.dart';
-import 'package:palm_diagnose/features/main/widgets/custom_buttom_bar.dart';
-import 'package:palm_diagnose/features/main/widgets/loading_overlay.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shimmer/shimmer.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:palm_diagnose/features/main/widgets/loading_animation.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 
 class DetectionResultPage extends StatefulWidget {
   final File? imageFile;
@@ -35,11 +33,19 @@ class DetectionResultPage extends StatefulWidget {
 }
 
 class _DetectionResultPageState extends State<DetectionResultPage> {
-  bool _isSaving = false;
-  String _displayName = 'User';
-  String? _photoUrl;
-  Position? _lastPosition;
+  final FirebaseService _firebaseService = FirebaseService();
+  geo.Position? _lastPosition;
   String? _locationName;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (AppLocationState.isAvailable) {
+      _lastPosition = AppLocationState.position;
+      _locationName = AppLocationState.locationName;
+    }
+  }
 
   String getMostConfidentLabel() {
     if (widget.results.isEmpty) return '';
@@ -47,61 +53,50 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
     return widget.results.first.label;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserInfo();
-
-    if (AppLocationState.isAvailable) {
-      _lastPosition = AppLocationState.position;
-      _locationName = AppLocationState.locationName;
+  LinearGradient _getGradient(double confidence) {
+    if (confidence >= 70) {
+      return const LinearGradient(
+        colors: [Color(0xFFA2EBA6), Color(0xFF28782C)],
+      );
+    } else if (confidence >= 40) {
+      return const LinearGradient(
+        colors: [Color(0xFFE6D969), Color(0xFFF7BC25)],
+      );
+    } else {
+      return const LinearGradient(
+        colors: [Color(0xFFF77270), Color(0xFFCB2626)],
+      );
     }
   }
 
-  Future<void> _loadUserInfo() async {
-    try {
-      final data = await UserService().getCurrentUserData();
-      setState(() {
-        _displayName = data?['displayName'] ?? 'User';
-        _photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
-      });
-    } catch (e) {
-      debugPrint('❌ Gagal ambil data user: $e');
-    }
+  String _getConfidenceStatus(double value) {
+    if (value >= 70) return '🟢 Sangat Yakin';
+    if (value >= 40) return '🟠 Cukup Yakin';
+    return '🔴 Kurang Yakin';
   }
 
-  Future<void> _saveResultsToFirestore() async {
+  Future<void> _saveToFirestore() async {
     if (_lastPosition == null) {
       AwesomeDialog(
         context: context,
         dialogType: DialogType.warning,
-        animType: AnimType.bottomSlide,
         title: 'GPS Tidak Aktif',
-        desc:
-            'Silakan aktifkan GPS terlebih dahulu sebelum menyimpan hasil deteksi.',
+        desc: 'Aktifkan GPS terlebih dahulu sebelum menyimpan.',
         btnOkText: 'Buka Pengaturan',
+        btnCancelText: 'Batal',
         btnOkOnPress: () async {
           final pos = await LocationService.getCurrentLocation();
           if (pos != null) {
             final name = await LocationService.getAddressFromPosition(pos);
+            if (!mounted) return;
             setState(() {
               _lastPosition = pos;
               _locationName = name;
             });
             AppLocationState.update(pos, name);
-            _saveResultsToFirestore(); // retry
-          } else {
-            AwesomeDialog(
-              context: context,
-              dialogType: DialogType.error,
-              title: 'Lokasi Gagal',
-              desc: '❌ Lokasi tetap tidak tersedia. Simpan dibatalkan.',
-              btnOkOnPress: () {},
-            ).show();
+            _saveToFirestore(); // Retry
           }
         },
-        btnCancelText: 'Batal',
-        btnCancelOnPress: () {},
       ).show();
       return;
     }
@@ -112,7 +107,7 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid == null) throw Exception("User tidak login");
 
-      await FirebaseService().saveDetectionResults(
+      await _firebaseService.saveDetectionResults(
         uid: uid,
         filename: widget.filename,
         results: widget.results.map((e) => e.toJson()).toList(),
@@ -123,29 +118,68 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
         },
       );
 
-      if (mounted) {
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.success,
-          title: 'Berhasil',
-          desc: '✅ Hasil deteksi berhasil disimpan.',
-          btnOkOnPress: () {},
-        ).show();
-      }
+      if (!mounted) return;
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.success,
+        title: 'Berhasil',
+        desc: 'Hasil deteksi berhasil disimpan.',
+        btnOkOnPress: () {},
+      ).show();
     } catch (e) {
-      debugPrint("❌ Gagal simpan: $e");
-      if (mounted) {
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.error,
-          title: 'Gagal',
-          desc: '❌ Gagal menyimpan hasil deteksi.',
-          btnOkOnPress: () {},
-        ).show();
-      }
+      if (!mounted) return;
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        title: 'Gagal',
+        desc: 'Terjadi kesalahan saat menyimpan hasil.',
+        btnOkOnPress: () {},
+      ).show();
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  Widget _buildRadialChart(DetectionResult result) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 90,
+          width: 90,
+          child: SfCircularChart(
+            margin: EdgeInsets.zero,
+            series: <CircularSeries>[
+              RadialBarSeries<_ChartData, String>(
+                dataSource: [_ChartData('Confidence', result.confidence)],
+                maximumValue: 100,
+                radius: '100%',
+                innerRadius: '75%',
+                cornerStyle: CornerStyle.bothCurve,
+                trackColor: const Color.fromARGB(168, 196, 196, 196),
+                pointShaderMapper: (_, __, ___, rect) =>
+                    _getGradient(result.confidence).createShader(rect),
+                xValueMapper: (data, _) => data.x,
+                yValueMapper: (data, _) => data.y,
+              ),
+            ],
+            annotations: [
+              CircularChartAnnotation(
+                widget: Text(
+                  '${result.confidence.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _getConfidenceStatus(result.confidence),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Text('Metode: ${result.model}', style: const TextStyle(fontSize: 12)),
+      ],
+    );
   }
 
   Widget _buildDiseaseInfo(String label) {
@@ -156,263 +190,135 @@ class _DetectionResultPageState extends State<DetectionResultPage> {
           .get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
-            child: Container(
-              height: 100,
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-
         if (!snapshot.hasData || !snapshot.data!.exists) {
-          return const SizedBox.shrink();
+          return const Text('Informasi penyakit tidak ditemukan.');
         }
 
         final data = snapshot.data!.data() as Map<String, dynamic>;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.green.shade100, Colors.green.shade300],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '🦠 Deskripsi Penyakit',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Deskripsi',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                data['description'] ?? '-',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Penanganan',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                data['treatment'] ?? '-',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
+            const SizedBox(height: 8),
+            Text(data['description'] ?? '-'),
+            const SizedBox(height: 16),
+            const Text(
+              '💊 Rekomendasi Penanganan',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(data['treatment'] ?? '-'),
+          ],
         );
       },
     );
   }
 
-  Widget _buildDetectionCard(DetectionResult result) {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              CircularPercentIndicator(
-                radius: 45.0,
-                lineWidth: 10.0,
-                animation: true,
-                percent: result.confidence / 100,
-                center: Text(
-                  "${result.confidence.toStringAsFixed(1)}%",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.0,
-                  ),
-                ),
-                circularStrokeCap: CircularStrokeCap.round,
-                progressColor: Colors.green,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_lastPosition != null && _locationName != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: Colors.green,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                _locationName!,
-                                style: Theme.of(context).textTheme.bodySmall,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    Text(
-                      "Model: ${result.model}",
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "Label: ${result.label}",
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final imageWidget = kIsWeb
+    final image = kIsWeb
         ? (widget.imageBytesWeb != null
               ? Image.memory(widget.imageBytesWeb!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported))
+              : const Icon(Icons.broken_image))
         : (widget.imageFile != null
               ? Image.file(widget.imageFile!, fit: BoxFit.cover)
-              : const Icon(Icons.image_not_supported));
+              : const Icon(Icons.broken_image));
 
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          body: SafeArea(
-            child: Column(
-              children: [
-                CustomTopAppBar(
-                  upperTitle: "Hasil",
-                  title: _displayName,
-                  profileImageUrl: _photoUrl,
-                  onTapProfile: () {},
+    return Scaffold(
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                backgroundColor: Colors.transparent,
+                expandedHeight: 240,
+                automaticallyImplyLeading: false, // 👈 tambahkan ini
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Hero(tag: widget.filename, child: image),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: SizedBox(
-                            height: 200,
-                            width: double.infinity,
-                            child: ShaderMask(
-                              shaderCallback: (rect) {
-                                return LinearGradient(
-                                  colors: [
-                                    Colors.white.withAlpha(51),
-                                    Colors.white.withAlpha(13),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ).createShader(rect);
-                              },
-                              blendMode: BlendMode.srcATop,
-                              child: imageWidget,
-                            ),
-                          ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '🩺 Hasil Deteksi',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: ListView(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            children: [
-                              ...widget.results.map(
-                                (result) => Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 8,
-                                  ),
-                                  child: _buildDetectionCard(result),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              _buildDiseaseInfo(getMostConfidentLabel()),
-                              const SizedBox(height: 16),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: _isSaving
-                                ? null
-                                : _saveResultsToFirestore,
-                            icon: const Icon(Icons.save),
-                            label: Text(
-                              _isSaving ? "Menyimpan..." : "Simpan Hasil",
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '🗓️ Tanggal: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}',
+                      ),
+                      if (_locationName != null)
+                        Text('📍 Lokasi: $_locationName'),
+                      const SizedBox(height: 12),
+                      ...widget.results.map((r) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text('🧪 ${r.model} → ${r.label}'),
+                        );
+                      }).toList(),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: widget.results
+                            .map((r) => _buildRadialChart(r))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 32),
+                      _buildDiseaseInfo(getMostConfidentLabel()),
+                    ],
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          Positioned(
+            top: 36,
+            left: 16,
+            child: CircleAvatar(
+              backgroundColor: Colors.black54,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
           ),
-          bottomNavigationBar: BottomNavBarCurvedFb1(
-            currentIndex: 1,
-            onItemTapped: (index) {
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
-            onFabPressed: () {},
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveToFirestore,
+              icon: const Icon(Icons.save),
+              label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Hasil'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: Colors.green[700],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
-        ),
-        if (_isSaving) const LoadingOverlay(), // ✅ Lottie loading di atas
-      ],
+        ],
+      ),
     );
   }
+}
+
+class _ChartData {
+  final String x;
+  final double y;
+  _ChartData(this.x, this.y);
 }

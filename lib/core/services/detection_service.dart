@@ -35,7 +35,7 @@ class DetectionResponse {
 }
 
 class DetectionService {
-  static const String _baseUrl = "https://cad0f9e558f6.ngrok-free.app/predict";
+  static const String _baseUrl = "https://f72cc3896f6e.ngrok-free.app/predict";
 
   // 🔍 Untuk Android/iOS/Desktop
   static Future<DetectionResponse> predict(File imageFile) async {

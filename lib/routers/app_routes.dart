@@ -97,6 +97,7 @@ class AppRoutes {
           model: args['model'],
           confidence: args['confidence'],
           date: args['date'],
+          location: args['location'],
         );
       } else {
         return const Scaffold(
@@ -133,6 +134,7 @@ class AppRoutes {
           model: args['model'],
           confidence: args['confidence'],
           date: args['date'],
+          location: args['location'],
           data: {},
         );
       } else {

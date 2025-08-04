@@ -97,13 +97,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 24),
-                    const Text(
-                      "Logoipsum",
-                      style: TextStyle(
-                        fontSize: 35,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+
+                    Image.asset(
+                      'assets/images/branding.png',
+                      width: 350,
+                      height: 70,
+                      // fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 32),
                     Container(
@@ -119,9 +118,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // const AuthBackButton(),
-                          const SizedBox(height: 16),
+                          // const SizedBox(height: 10),
                           const GradientText(
-                            "Sign Up",
+                            "Buat Akun",
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
@@ -149,7 +148,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text("Already have an account? "),
+                              const Text("Sudah Punya Akun? "),
                               GestureDetector(
                                 onTap: () {
                                   Navigator.pushReplacement(
@@ -160,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   );
                                 },
                                 child: const Text(
-                                  "Sign In",
+                                  "Masuk",
                                   style: TextStyle(
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
@@ -180,7 +179,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           const SizedBox(height: 16),
                           AuthInputField(
-                            hintText: "example@gmai.com",
+                            hintText: "contoh@gmai.com",
                             label: "Email",
                             controller: emailController,
                             validator: (value) => value == null || value.isEmpty
@@ -227,7 +226,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             valueListenable: isConfirmVisible,
                             builder: (_, visible, __) {
                               return AuthInputField(
-                                label: "Confirm Password",
+                                label: "Konfirmasi Password",
                                 hintText: "*******",
                                 controller: confirmController,
                                 isPassword: true,
@@ -262,7 +261,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     color: Colors.white,
                                   )
                                 : const Text(
-                                    "Register",
+                                    "Buat Akun",
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,

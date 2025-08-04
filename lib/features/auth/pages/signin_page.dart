@@ -78,15 +78,14 @@ class _SignInScreenState extends State<SignInScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 24),
-                  const Text(
-                    "Logoipsum",
-                    style: TextStyle(
-                      fontSize: 35,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+
+                  Image.asset(
+                    'assets/images/branding.png',
+                    width: 350,
+                    height: 70,
+                    // fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 15),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -107,7 +106,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         const GradientText(
-                          "Get Started now",
+                          "Deteksi Penyakit Sekarang",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 22,
@@ -125,7 +124,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Create an account or log in to explore our app",
+                          "Buat Akun atau Masuk untuk menggunakan aplikasi",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
@@ -154,7 +153,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               },
                               icon: SvgPicture.string(googleIcon, height: 20),
                               label: const Text(
-                                "Sign in with Google",
+                                "Masuk dengan Google",
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -185,7 +184,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             Expanded(child: Divider()),
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text("Or"),
+                              child: Text("Atau"),
                             ),
                             Expanded(child: Divider()),
                           ],
@@ -193,7 +192,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 16),
                         AuthInputField(
                           label: "Email",
-                          hintText: "exmaple@gmail.com",
+                          hintText: "contoh@gmail.com",
                           controller: emailController,
                         ),
                         const SizedBox(height: 16),
@@ -236,7 +235,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                       const SizedBox(width: 4),
                                       const Expanded(
                                         child: Text(
-                                          "Remember me",
+                                          "Ingat saya",
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontSize: 12,
@@ -252,7 +251,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             TextButton(
                               onPressed: () {},
                               child: const Text(
-                                "Forgot Password?",
+                                "Lupa Password?",
                                 style: TextStyle(
                                   color: Colors.blue,
                                   fontWeight: FontWeight.w500,
@@ -336,7 +335,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 ),
                               ),
                               child: const Text(
-                                "Log In",
+                                "Masuk",
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
@@ -349,7 +348,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("Don’t have an account? "),
+                            const Text("Belum Punya Akun? "),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
@@ -360,7 +359,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 );
                               },
                               child: const Text(
-                                "Sign Up",
+                                "Buat Akun",
                                 style: TextStyle(
                                   color: Colors.blue,
                                   fontWeight: FontWeight.bold,

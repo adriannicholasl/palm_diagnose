@@ -19,7 +19,7 @@ class _NotificationStackCardState extends State<NotificationStackCard> {
     ),
     _NotifItem(
       title: "Lengkapi Data Anda",
-      subtitle: "Profil pengguna belum lengkap",
+      subtitle: "Pastikan Profil sudah lengkap",
       icon: Icons.info_outline_rounded,
     ),
   ];

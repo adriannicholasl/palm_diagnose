@@ -10,15 +10,21 @@ class DetectNavigator {
   static void startDetection(BuildContext context) {
     DialogUtils.showImageSourceActionSheet(context, (source) async {
       final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: source);
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 100, // ✅ Full quality
+        maxWidth: null,
+        maxHeight: null,
+        requestFullMetadata: true, // 🆕 membantu beberapa device
+      );
 
       if (pickedFile != null) {
         if (!context.mounted) return;
 
         if (kIsWeb) {
           final Uint8List imageBytes = await pickedFile.readAsBytes();
+          debugPrint("📏 [Web] File size: ${imageBytes.length} bytes");
           Navigator.push(
-            // ignore: use_build_context_synchronously
             context,
             MaterialPageRoute(
               builder: (_) => DetectPage(imageBytesWeb: imageBytes),
@@ -26,6 +32,10 @@ class DetectNavigator {
           );
         } else {
           final io.File file = io.File(pickedFile.path);
+          debugPrint(
+            "📏 [Mobile/Desktop] File size: ${file.lengthSync()} bytes",
+          );
+
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => DetectPage(imageFile: file)),

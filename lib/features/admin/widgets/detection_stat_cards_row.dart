@@ -47,8 +47,7 @@ class _DetectionStatCardsRowState extends State<DetectionStatCardsRow> {
             child: _CardFb1(
               text: "Hasil Deteksi",
               subtitle: subtitleText,
-              imageUrl:
-                  "https://firebasestorage.googleapis.com/v0/b/flutterbricks-public.appspot.com/o/illustrations%2Fundraw_Designer_re_5v95%201.png?alt=media&token=5d053bd8-d0ea-4635-abb6-52d87539b7e",
+              imageUrl: "assets/images/undraw_designer_re_5v95_1.png",
               onPressed: widget.onStatTap,
               useGradient: false,
             ),
@@ -58,8 +57,7 @@ class _DetectionStatCardsRowState extends State<DetectionStatCardsRow> {
             child: _CardFb1(
               text: "Deteksi",
               subtitle: "Akses cepat",
-              imageUrl:
-                  "https://firebasestorage.googleapis.com/v0/b/flutterbricks-public.appspot.com/o/illustrations%2Fundraw_Designer_re_5v95%201.png?alt=media&token=5d053bd8-d0ea-4635-abb6-52d87539b7e",
+              imageUrl: "assets/images/image_upload_amico.png",
               onPressed: widget.onDetectTap,
               useGradient: true,
             ),
@@ -118,7 +116,13 @@ class _CardFb1 extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Image.network(imageUrl, height: 70),
+            Image(
+              image: imageUrl.startsWith('http')
+                  ? NetworkImage(imageUrl)
+                  : AssetImage(imageUrl),
+              height: 70,
+              fit: BoxFit.contain,
+            ),
             const SizedBox(height: 8),
             Text(
               text,

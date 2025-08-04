@@ -123,6 +123,9 @@ class _HistoryDetectPageState extends State<HistoryDetectPage>
                 final items = docs.expand((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final filename = data['filename'] ?? '';
+                  final locationName =
+                      data['location']?['name'] ??
+                      ''; // ✅ ambil lokasi jika ada
                   final createdAt = data['createdAt'];
                   final date = (createdAt is Timestamp)
                       ? createdAt.toDate()
@@ -139,8 +142,9 @@ class _HistoryDetectPageState extends State<HistoryDetectPage>
                       'confidence':
                           (result['confidence'] as num?)?.toDouble() ?? 0.0,
                       'imageUrl':
-                          'https://cad0f9e558f6.ngrok-free.app/uploads/$filename',
+                          'https://f72cc3896f6e.ngrok-free.app/uploads/$filename',
                       'date': date,
+                      'location': locationName, // ✅ sertakan lokasi
                     },
                   );
                 }).toList();
@@ -236,6 +240,9 @@ class _HistoryDetectPageState extends State<HistoryDetectPage>
                                       'model': model,
                                       'confidence': confidence,
                                       'date': date,
+                                      'location':
+                                          item['location'] ??
+                                          '', // ✅ pastikan dikirim
                                     },
                                   );
                                 },
